@@ -12,7 +12,7 @@ interface TeamSelectProps {
 }
 
 function TeamSelect({ value, onChange, excludeKey, label, testId, divFilter }: TeamSelectProps) {
-  const confs = ["Eastern", "Western"];
+  const confs = [...new Set(Object.values(TEAMS).map((team) => team.conf))];
   return (
     <div>
       <div style={{ fontSize: 11, color: "#8faabf", letterSpacing: 3, marginBottom: 5 }}>{label}</div>
