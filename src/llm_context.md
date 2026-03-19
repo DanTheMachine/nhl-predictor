@@ -1,48 +1,160 @@
 Project: nhl-predictor
 
 Purpose:
-Build an NHL Predictive model
+Build and validate an NHL prediction app that supports single-game analysis, daily slate simulation, CSV export, and model-performance evaluation.
 
-Key stack:
-React
+Current stack:
+- React 19
+- TypeScript
+- Vite
+- Vitest
+- Playwright
+- GitHub Actions
 
-Important modules:
-- src/nhl-predictor.tsx
+Current architecture:
+- `src/nhl-core`
+  - shared domain layer
+  - team data, types, shared stat components, core tests
+- `src/nhl-predictor`
+  - app feature layer
+  - panels, controller hook, API fetch logic, export logic, evaluation logic
+- `src/nhl-predictor.tsx`
+  - app composition entry for the predictor UI
 
+Important files:
+- `src/nhl-predictor.tsx`
+- `src/nhl-predictor/useNhlPredictorController.ts`
+- `src/nhl-predictor/AnalysisPanel.tsx`
+- `src/nhl-predictor/EvaluationPanel.tsx`
+- `src/nhl-predictor/evaluation.ts`
+- `src/nhl-predictor/export.ts`
+- `src/nhl-core/data.ts`
+- `src/nhl-core/types.ts`
+- `.github/workflows/ci.yml`
+- `playwright.config.ts`
+- `RUNNING_THE_MODEL.md`
 
-Summary:
-NHL Predictor - Google Sheets Workflow Fixes
-LookupKey bug - Predictions CSV exported Home as "CAR Hurricanes" (abbr + name), so C2&D2 never matched the Results LookupKey of "CARCGY". Fixed by adding a dedicated LookupKey column to the Predictions CSV export built from homeAbbr + awayAbbr only.
-Date-prefixed LookupKey - To handle duplicate matchups across a season/playoffs, LookupKey was changed to YYYYMMDD + homeAbbr + awayAbbr (e.g. 20260312PITBOS) in both the Predictions and Results CSV exports. Both use ET timezone to stay consistent with NHL scheduling.
-Google Sheets formula columns (row 2, drag to 2000):
+Major work completed:
 
-AL2 (LookupKey): =IFERROR(TEXT(A2,"YYYYMMDD")&LEFT(C2,FIND(" ",C2)-1)&LEFT(D2,FIND(" ",D2)-1),"")
-AM2 (Actual Home Goals): =IFERROR(INDEX(Results!$A:$H,MATCH(AL2,Results!$H:$H,0),MATCH("Home Goals",Results!$1:$1,0)),"")
-AN2 (Actual Away Goals): same pattern, "Away Goals"
-AO2 (Actual Winner): same pattern, "Winner"
-AP2 (Actual Total): same pattern, "Total"
-AQ2 (ML Hit): =IF(OR(AO2="",S2="",S2="PASS"),"",IF(S2="HOME ML",IF(AO2=LEFT(C2,FIND(" ",C2)-1),1,0),IF(S2="AWAY ML",IF(AO2=LEFT(D2,FIND(" ",D2)-1),1,0),"")))
-AR2 (O/U Hit): =IF(OR(AP2="",J2="",K2="",K2="PASS"),"",IF((AP2>J2)=(K2="OVER"),1,0))
-AS2 (PL Hit): Handles all four puck line values - HOME -1.5, AWAY -1.5, HOME +1.5, AWAY +1.5
+1. Architecture cleanup
+- Broke the old monolithic predictor UI into focused modules:
+  - `DashboardHeader.tsx`
+  - `ModelSetupPanel.tsx`
+  - `SingleGamePanel.tsx`
+  - `SingleGameResults.tsx`
+  - `SchedulePanel.tsx`
+  - `AnalysisPanel.tsx`
+- Extracted logic into:
+  - `api.ts`
+  - `engine.ts`
+  - `export.ts`
+  - `useNhlPredictorController.ts`
+- Renamed `src/nhl` to `src/nhl-core` to clarify the shared domain boundary.
 
-Key behaviors:
+2. Testing
+- Added Vitest unit and component tests.
+- Added Playwright E2E tests.
+- Current passing local status at last handoff:
+  - `npm run lint`
+  - `npm test`
+  - `npm run build`
+  - `npm run test:e2e`
 
-Blank = PASS (no bet placed), not an error
-Results and Predictions tabs don't need to match row counts - MATCH-based lookup finds by key regardless of order
-Renaming tabs via Google Sheets UI auto-updates all formula references
-Hit rate formula: =COUNTIF(col,1)/(COUNTIF(col,1)+COUNTIF(col,0)) - ignores blanks correctly
-1/0 preferred over W/L for easier COUNTIF/SUM/AVERAGE math
+3. Model evaluation / backtesting first pass
+- Added in-app `MODEL EVALUATION` section via `EvaluationPanel.tsx`.
+- Supports paste or file upload for Predictions CSV and Results CSV.
+- Matches by `LookupKey`.
+- Computes:
+  - ROI by market
+  - units by market
+  - hit rate by market
+  - edge-threshold summaries
+  - calibration buckets
+  - matched vs unmatched game counts
+- Core logic lives in `src/nhl-predictor/evaluation.ts`.
+- Tests for this logic live in `src/nhl-predictor/evaluation.test.ts`.
 
-Predictions CSV date fix - Was using new Date() local time, which rolled to the next day after midnight. Fixed to use ET timezone (America/New_York) consistently across the filename, date column, and LookupKey in both buildExportRow and handleExport.
+4. CSV export improvements
+- Prediction export now includes additional market columns needed for evaluation:
+  - `Vegas Puck Line`
+  - `Home PL Odds`
+  - `Away PL Odds`
+  - `Over Odds`
+  - `Under Odds`
+- This enables real puck-line and O/U ROI grading in the evaluation panel.
 
-NHL Predictor - UI Improvements (this session)
-Best Bets section - Added below sim results cards after Run All Sims. Pools all ML, PL, and O/U bets across all simmed games, sorts by edge % descending. Compact single-row layout with columns: Game / Pick | Model | Odds | Edge | Kelly | Strength badge (STRONG >= 8%, MED 4-8%, THIN < 4%). Model column shows win% for ML, cover% for PL, projected total for O/U. Kelly only shown for ML bets.
-Single-game odds fetch - Status line now shows full line: ESPN / NYI -142 / PHI +120 / PL -1.5 (-130/+108) / O/U 5.5 (-110/-110). Clicking MANUAL when ESPN odds are loaded pre-populates all 8 manual input fields with the fetched values.
-Green color consistency - Three status messages now all use #4ade80:
+5. CI / GitHub Actions
+- Added `.github/workflows/ci.yml`
+- Workflow runs on push to `main` and on pull requests.
+- Steps:
+  - `npm ci`
+  - install Playwright Chromium
+  - `npm run lint`
+  - `npm test`
+  - `npm run build`
+  - `npm run test:e2e`
+- GitHub Actions has already run successfully after push.
 
-Fetch ESPN Data confirmation
-Apply NST Data confirmation
-Single-game Live Lines confirmation (was already green)
+Important fixes made recently:
+- Playwright config was changed from `npm.cmd` to `npm run ...` for GitHub Linux runner compatibility.
+- Fixed a real UI bug in `ModelSetupPanel.tsx`:
+  - team select used `"Eastern"` / `"Western"`
+  - team data actually uses `"East"` / `"West"`
+  - this caused team dropdowns to render with no options in E2E runs
+  - fixed by deriving conference groups directly from `TEAMS`
 
+Docs updated:
+- `RUNNING_THE_MODEL.md`
+  - added testing section
+  - added model evaluation instructions
+  - updated workflow summary to include evaluation step
+- `NHL_MODEL_PREDICTION_ALGORITHMS.md`
+  - definitions now include practical score bands like average / good / elite for major inputs
 
-Current file: nhl-predictor.tsx in outputs - this is the actively maintained version. Upload it at the start of any new session before making changes.
+Current state:
+- Project is on GitHub
+- GitHub Actions is set up and passing
+- Evaluation workflow exists in-app
+- Architecture is much cleaner than the original monolith
+- Naming is clearer with `nhl-core`
+
+Known follow-up priorities discussed:
+1. Cleaner data boundary / typed adapters
+- normalize raw ESPN / NHL / manual / pasted-book data into one stable internal model
+- likely the best next major engineering step
+
+2. Durable local storage
+- save prior exports
+- save manual line edits
+- save goalie overrides
+- save pasted books
+- save historical run metadata
+
+3. Error handling / resilience
+- clearer retry and timeout handling
+- clearer confidence/fallback states when APIs partially fail
+
+4. Accessibility / UX hardening
+- better labels and semantics
+- keyboard friendliness
+- clearer loading/error states
+- improve giant lines table behavior on smaller screens
+
+5. Encoding cleanup
+- there are still some mojibake / text-encoding artifacts in UI strings and docs
+
+Recommended next step:
+- Introduce a normalized data layer between raw fetch/parsing code and model/app usage.
+- Good target areas:
+  - normalized team stats
+  - normalized schedule game objects
+  - normalized odds objects
+  - normalized results objects
+
+Notes for next session:
+- The repo currently has both `src/nhl-core/*` and `src/nhl-predictor/*`.
+- This is intentional and now reasonably clean:
+  - `nhl-core` = shared domain code
+  - `nhl-predictor` = app feature
+- Optional future naming cleanup:
+  - rename `src/nhl-predictor.tsx` to something like `NHLPredictorApp.tsx` to reduce confusion with the folder name.
