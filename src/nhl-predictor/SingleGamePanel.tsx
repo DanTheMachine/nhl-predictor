@@ -58,6 +58,7 @@ export function SingleGamePanel(props: SingleGamePanelProps) {
           </div>
         </div>
         <button
+          data-testid="single-game-toggle"
           onClick={onToggleOpen}
           style={{
             background: isOpen ? "rgba(56,189,248,0.1)" : "rgba(100,180,255,0.04)",

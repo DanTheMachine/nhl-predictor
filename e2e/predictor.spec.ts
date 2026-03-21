@@ -3,6 +3,7 @@ import { expect, test } from '@playwright/test'
 test.describe('NHL Predictor', () => {
   test('runs a playoff simulation for a selected matchup', async ({ page }) => {
     await page.goto('/')
+    await page.getByTestId('single-game-toggle').click()
 
     await page.getByTestId('home-team-select').selectOption('COL')
     await page.getByTestId('away-team-select').selectOption('DAL')
@@ -17,6 +18,7 @@ test.describe('NHL Predictor', () => {
 
   test('applies manual odds and exports a single-game CSV', async ({ page }) => {
     await page.goto('/')
+    await page.getByTestId('single-game-toggle').click()
 
     await page.getByTestId('home-team-select').selectOption('COL')
     await page.getByTestId('away-team-select').selectOption('CHI')
@@ -46,3 +48,4 @@ test.describe('NHL Predictor', () => {
     expect(download.suggestedFilename()).toContain('vs')
   })
 })
+
