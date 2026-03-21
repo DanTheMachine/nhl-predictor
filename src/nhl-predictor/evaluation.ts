@@ -20,6 +20,9 @@ export interface PredictionRecord {
   ouEdge: number | null;
   puckLineRec: "home -1.5" | "home +1.5" | "away -1.5" | "away +1.5" | "pass";
   puckLineEdge: number | null;
+  mlBetUnits: number | null;
+  ouBetUnits: number | null;
+  puckLineBetUnits: number | null;
 }
 
 export interface ResultRecord {
@@ -36,6 +39,8 @@ export interface EvaluatedBet {
   label: string;
   edgePct: number;
   odds: number;
+  stake: number;
+  hasExplicitStake: boolean;
   won: boolean;
   push: boolean;
   profit: number;
@@ -50,6 +55,13 @@ export interface MarketSummary {
   hitRate: number;
   units: number;
   roi: number;
+  actualBets: number;
+  actualWins: number;
+  actualLosses: number;
+  actualPushes: number;
+  actualHitRate: number;
+  actualUnits: number;
+  actualRoi: number;
 }
 
 export interface ThresholdSummary {
@@ -125,12 +137,26 @@ function parseCSV(text: string): string[][] {
   return rows;
 }
 
-function rowsToObjects(text: string): Record<string, string>[] {
+function normalizeHeader(value: string): string {
+  return value.trim().replace(/^\uFEFF/, "");
+}
+
+function findHeaderRowIndex(rows: string[][], requiredHeaders: string[]): number {
+  return rows.findIndex((row) => {
+    const headers = new Set(row.map(normalizeHeader));
+    return requiredHeaders.every((header) => headers.has(header));
+  });
+}
+
+function rowsToObjects(text: string, requiredHeaders: string[]): Record<string, string>[] {
   const rows = parseCSV(text.trim());
   if (rows.length < 2) return [];
 
-  const headers = rows[0].map((header) => header.trim());
-  return rows.slice(1).map((row) => {
+  const headerRowIndex = findHeaderRowIndex(rows, requiredHeaders);
+  if (headerRowIndex < 0) return [];
+
+  const headers = rows[headerRowIndex].map(normalizeHeader);
+  return rows.slice(headerRowIndex + 1).map((row) => {
     const record: Record<string, string> = {};
     headers.forEach((header, index) => {
       record[header] = row[index]?.trim() ?? "";
@@ -158,76 +184,114 @@ function calcProfit(odds: number, won: boolean, push: boolean): number {
   return odds > 0 ? odds / 100 : 100 / Math.abs(odds);
 }
 
-function summarizeMarket(market: MarketSummary["market"], bets: EvaluatedBet[]): MarketSummary {
-  const marketBets = bets.filter((bet) => bet.market === market);
-  const wins = marketBets.filter((bet) => bet.won && !bet.push).length;
-  const pushes = marketBets.filter((bet) => bet.push).length;
-  const losses = marketBets.length - wins - pushes;
+function summarizeBetGroup(bets: EvaluatedBet[]) {
+  const wins = bets.filter((bet) => bet.won && !bet.push).length;
+  const pushes = bets.filter((bet) => bet.push).length;
+  const losses = bets.length - wins - pushes;
   const graded = wins + losses;
-  const units = marketBets.reduce((sum, bet) => sum + bet.profit, 0);
+  const units = bets.reduce((sum, bet) => sum + bet.profit, 0);
+  const riskedUnits = bets.reduce((sum, bet) => sum + bet.stake, 0);
 
   return {
-    market,
-    bets: marketBets.length,
+    bets: bets.length,
     wins,
     losses,
     pushes,
     hitRate: graded > 0 ? wins / graded : 0,
     units,
-    roi: marketBets.length > 0 ? units / marketBets.length : 0,
+    roi: riskedUnits > 0 ? units / riskedUnits : 0,
+  };
+}
+
+function summarizeMarket(market: MarketSummary["market"], bets: EvaluatedBet[]): MarketSummary {
+  const marketBets = bets.filter((bet) => bet.market === market);
+  const actualMarketBets = marketBets.filter((bet) => bet.hasExplicitStake);
+  const summary = summarizeBetGroup(marketBets);
+  const actualSummary = summarizeBetGroup(actualMarketBets);
+
+  return {
+    market,
+    bets: summary.bets,
+    wins: summary.wins,
+    losses: summary.losses,
+    pushes: summary.pushes,
+    hitRate: summary.hitRate,
+    units: summary.units,
+    roi: summary.roi,
+    actualBets: actualSummary.bets,
+    actualWins: actualSummary.wins,
+    actualLosses: actualSummary.losses,
+    actualPushes: actualSummary.pushes,
+    actualHitRate: actualSummary.hitRate,
+    actualUnits: actualSummary.units,
+    actualRoi: actualSummary.roi,
   };
 }
 
 export function parsePredictionCsv(text: string): PredictionRecord[] {
-  return rowsToObjects(text).map((row) => ({
-    lookupKey: row["LookupKey"] ?? "",
-    homeAbbr: parseAbbr(row["Home"]),
-    awayAbbr: parseAbbr(row["Away"]),
-    homeWinProb: (parseNumber(row["Home Win %"]) ?? 0) / 100,
-    awayWinProb: (parseNumber(row["Away Win %"]) ?? 0) / 100,
-    homeEdgePct: parseNumber(row["Home ML Edge"]),
-    awayEdgePct: parseNumber(row["Away ML Edge"]),
-    mlValueSide:
-      row["ML Value Side"] === "HOME ML"
-        ? "home"
-        : row["ML Value Side"] === "AWAY ML"
-          ? "away"
+  return rowsToObjects(text, ["LookupKey", "Home", "Away"])
+    .filter((row) => row["LookupKey"]?.trim())
+    .map((row) => ({
+      lookupKey: row["LookupKey"] ?? "",
+      homeAbbr: parseAbbr(row["Home"]),
+      awayAbbr: parseAbbr(row["Away"]),
+      homeWinProb: (parseNumber(row["Home Win %"]) ?? 0) / 100,
+      awayWinProb: (parseNumber(row["Away Win %"]) ?? 0) / 100,
+      homeEdgePct: parseNumber(row["Home ML Edge"]),
+      awayEdgePct: parseNumber(row["Away ML Edge"]),
+      mlValueSide:
+        row["ML Value Side"] === "HOME ML"
+          ? "home"
+          : row["ML Value Side"] === "AWAY ML"
+            ? "away"
+            : "pass",
+      mlKellyPct: parseNumber(row["ML Kelly %"]),
+      vegaHomeML: parseNumber(row["Vegas Home ML"]),
+      vegaAwayML: parseNumber(row["Vegas Away ML"]),
+      vegaPuckLine: parseNumber(row["Vegas Puck Line"]),
+      vegaPuckLineHomeOdds: parseNumber(row["Home PL Odds"]),
+      vegaPuckLineAwayOdds: parseNumber(row["Away PL Odds"]),
+      vegaOU: parseNumber(row["Vegas O/U"]),
+      vegaOverOdds: parseNumber(row["Over Odds"]),
+      vegaUnderOdds: parseNumber(row["Under Odds"]),
+      ouRec:
+        row["O/U Rec"]?.toLowerCase() === "over"
+          ? "over"
+          : row["O/U Rec"]?.toLowerCase() === "under"
+            ? "under"
+            : "pass",
+      ouEdge: parseNumber(row["O/U Edge"]),
+      puckLineRec:
+        row["Puck Line Rec"]?.toLowerCase() === "home -1.5" ||
+        row["Puck Line Rec"]?.toLowerCase() === "home +1.5" ||
+        row["Puck Line Rec"]?.toLowerCase() === "away -1.5" ||
+        row["Puck Line Rec"]?.toLowerCase() === "away +1.5"
+          ? (row["Puck Line Rec"].toLowerCase() as PredictionRecord["puckLineRec"])
           : "pass",
-    mlKellyPct: parseNumber(row["ML Kelly %"]),
-    vegaHomeML: parseNumber(row["Vegas Home ML"]),
-    vegaAwayML: parseNumber(row["Vegas Away ML"]),
-    vegaPuckLine: parseNumber(row["Vegas Puck Line"]),
-    vegaPuckLineHomeOdds: parseNumber(row["Home PL Odds"]),
-    vegaPuckLineAwayOdds: parseNumber(row["Away PL Odds"]),
-    vegaOU: parseNumber(row["Vegas O/U"]),
-    vegaOverOdds: parseNumber(row["Over Odds"]),
-    vegaUnderOdds: parseNumber(row["Under Odds"]),
-    ouRec:
-      row["O/U Rec"]?.toLowerCase() === "over"
-        ? "over"
-        : row["O/U Rec"]?.toLowerCase() === "under"
-          ? "under"
-          : "pass",
-    ouEdge: parseNumber(row["O/U Edge"]),
-    puckLineRec:
-      row["Puck Line Rec"]?.toLowerCase() === "home -1.5" ||
-      row["Puck Line Rec"]?.toLowerCase() === "home +1.5" ||
-      row["Puck Line Rec"]?.toLowerCase() === "away -1.5" ||
-      row["Puck Line Rec"]?.toLowerCase() === "away +1.5"
-        ? (row["Puck Line Rec"].toLowerCase() as PredictionRecord["puckLineRec"])
-        : "pass",
-    puckLineEdge: parseNumber(row["Puck Line Edge"]),
-  }));
+      puckLineEdge: parseNumber(row["Puck Line Edge"]),
+      mlBetUnits: parseNumber(row["ML Bet"]),
+      ouBetUnits: parseNumber(row["O/U Bet"]),
+      puckLineBetUnits: parseNumber(row["PL Bet"]),
+    }));
 }
 
 export function parseResultsCsv(text: string): ResultRecord[] {
-  return rowsToObjects(text).map((row) => ({
-    lookupKey: row["LookupKey"] ?? "",
-    homeGoals: parseNumber(row["Home Goals"]) ?? 0,
-    awayGoals: parseNumber(row["Away Goals"]) ?? 0,
-    winner: (row["Winner"] ?? "").toUpperCase(),
-    total: parseNumber(row["Total"]) ?? 0,
-  }));
+  return rowsToObjects(text, ["LookupKey"])
+    .filter((row) => row["LookupKey"]?.trim())
+    .map((row) => {
+      const homeGoalsColumn = "Actual Home Goals" in row ? "Actual Home Goals" : "Home Goals";
+      const awayGoalsColumn = "Actual Away Goals" in row ? "Actual Away Goals" : "Away Goals";
+      const winnerColumn = "Actual Winner" in row ? "Actual Winner" : "Winner";
+      const totalColumn = "Actual Total" in row ? "Actual Total" : "Total";
+
+      return {
+        lookupKey: row["LookupKey"] ?? "",
+        homeGoals: parseNumber(row[homeGoalsColumn]) ?? 0,
+        awayGoals: parseNumber(row[awayGoalsColumn]) ?? 0,
+        winner: (row[winnerColumn] ?? "").toUpperCase(),
+        total: parseNumber(row[totalColumn]) ?? 0,
+      };
+    });
 }
 
 export function evaluatePredictionResults(
@@ -250,15 +314,18 @@ export function evaluatePredictionResults(
 
       if (odds != null && edgePct != null) {
         const won = isHome ? result.winner === prediction.homeAbbr : result.winner === prediction.awayAbbr;
+        const stake = prediction.mlBetUnits ?? 1;
         bets.push({
           market: "ML",
           lookupKey: prediction.lookupKey,
           label: `${prediction.mlValueSide.toUpperCase()} ML`,
           edgePct,
           odds,
+          stake,
+          hasExplicitStake: prediction.mlBetUnits != null,
           won,
           push: false,
-          profit: calcProfit(odds, won, false),
+          profit: calcProfit(odds, won, false) * stake,
         });
       }
     }
@@ -271,15 +338,18 @@ export function evaluatePredictionResults(
           prediction.ouRec === "over"
             ? result.total > prediction.vegaOU
             : result.total < prediction.vegaOU;
+        const stake = prediction.ouBetUnits ?? 1;
         bets.push({
           market: "O/U",
           lookupKey: prediction.lookupKey,
           label: `${prediction.ouRec.toUpperCase()} ${prediction.vegaOU.toFixed(1)}`,
           edgePct: Math.abs(prediction.ouEdge ?? 0) * 10,
           odds,
+          stake,
+          hasExplicitStake: prediction.ouBetUnits != null,
           won,
           push,
-          profit: calcProfit(odds, won, push),
+          profit: calcProfit(odds, won, push) * stake,
         });
       }
     }
@@ -295,6 +365,7 @@ export function evaluatePredictionResults(
         const adjustedAway = isHome ? result.awayGoals : result.awayGoals + handicap;
         const push = adjustedHome === adjustedAway;
         const won = adjustedHome > adjustedAway;
+        const stake = prediction.puckLineBetUnits ?? 1;
 
         bets.push({
           market: "PL",
@@ -302,9 +373,11 @@ export function evaluatePredictionResults(
           label: prediction.puckLineRec.toUpperCase(),
           edgePct: prediction.puckLineEdge ?? 0,
           odds,
+          stake,
+          hasExplicitStake: prediction.puckLineBetUnits != null,
           won,
           push,
-          profit: calcProfit(odds, won, push),
+          profit: calcProfit(odds, won, push) * stake,
         });
       }
     }
@@ -312,21 +385,17 @@ export function evaluatePredictionResults(
 
   const thresholdSummaries: ThresholdSummary[] = [2, 4, 6, 8].map((threshold) => {
     const thresholdBets = bets.filter((bet) => bet.edgePct >= threshold);
-    const wins = thresholdBets.filter((bet) => bet.won && !bet.push).length;
-    const pushes = thresholdBets.filter((bet) => bet.push).length;
-    const losses = thresholdBets.length - wins - pushes;
-    const graded = wins + losses;
-    const units = thresholdBets.reduce((sum, bet) => sum + bet.profit, 0);
+    const summary = summarizeBetGroup(thresholdBets);
 
     return {
       threshold,
-      bets: thresholdBets.length,
-      wins,
-      losses,
-      pushes,
-      hitRate: graded > 0 ? wins / graded : 0,
-      units,
-      roi: thresholdBets.length > 0 ? units / thresholdBets.length : 0,
+      bets: summary.bets,
+      wins: summary.wins,
+      losses: summary.losses,
+      pushes: summary.pushes,
+      hitRate: summary.hitRate,
+      units: summary.units,
+      roi: summary.roi,
     };
   });
 

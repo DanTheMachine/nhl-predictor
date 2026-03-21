@@ -36,6 +36,7 @@ function TeamSelect({ value, onChange, excludeKey, label, testId, divFilter }: T
 }
 
 interface ModelSetupPanelProps {
+  showSingleGameExtras: boolean;
   divFilter: string;
   onDivFilterChange: (value: string) => void;
   homeTeam: string;
@@ -57,6 +58,7 @@ interface ModelSetupPanelProps {
 }
 
 export function ModelSetupPanel({
+  showSingleGameExtras,
   divFilter,
   onDivFilterChange,
   homeTeam,
@@ -76,6 +78,10 @@ export function ModelSetupPanel({
   hTeam,
   aTeam,
 }: ModelSetupPanelProps) {
+  if (!showSingleGameExtras) {
+    return null;
+  }
+
   return (
     <>
       <div className="nhl-card">
@@ -89,7 +95,6 @@ export function ModelSetupPanel({
             ))}
           </div>
         </div>
-
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 14 }}>
           <TeamSelect value={homeTeam} onChange={onHomeTeamChange} excludeKey={awayTeam} label="Home Team" testId="home-team-select" divFilter={divFilter} />
           <TeamSelect value={awayTeam} onChange={onAwayTeamChange} excludeKey={homeTeam} label="Away Team" testId="away-team-select" divFilter={divFilter} />

@@ -20,6 +20,7 @@ Current architecture:
   - panels, controller hook, API fetch logic, export logic, evaluation logic
 - `src/nhl-predictor.tsx`
   - app composition entry for the predictor UI
+  - now also controls the top-level predictor vs evaluation tab view
 
 Important files:
 - `src/nhl-predictor.tsx`
@@ -59,6 +60,9 @@ Major work completed:
   - `npm test`
   - `npm run build`
   - `npm run test:e2e`
+- Most recent passing counts:
+  - Vitest: 27 tests
+  - Playwright: 2 E2E tests
 
 3. Model evaluation / backtesting first pass
 - Added in-app `MODEL EVALUATION` section via `EvaluationPanel.tsx`.
@@ -82,6 +86,10 @@ Major work completed:
   - `Over Odds`
   - `Under Odds`
 - This enables real puck-line and O/U ROI grading in the evaluation panel.
+- Decision made for historical records:
+  - older prediction exports that never stored these fields will not be backfilled with guessed values
+  - unrecoverable legacy fields should remain blank
+  - evaluation logic should stay tolerant of partial legacy rows
 
 5. CI / GitHub Actions
 - Added `.github/workflows/ci.yml`
@@ -102,6 +110,13 @@ Important fixes made recently:
   - team data actually uses `"East"` / `"West"`
   - this caused team dropdowns to render with no options in E2E runs
   - fixed by deriving conference groups directly from `TEAMS`
+- Moved `SingleGamePanel` and `SingleGameResults` below the daily `SchedulePanel`
+  - current predictor page order is:
+    - header
+    - model setup
+    - today's lines / export workflow
+    - single game tools
+    - analysis
 
 Docs updated:
 - `RUNNING_THE_MODEL.md`
@@ -117,6 +132,8 @@ Current state:
 - Evaluation workflow exists in-app
 - Architecture is much cleaner than the original monolith
 - Naming is clearer with `nhl-core`
+- Single-game tools now sit below the today's-lines/export workflow
+- Legacy CSV rows may have blank evaluation columns where the old export format lacked recoverable market odds
 
 Known follow-up priorities discussed:
 1. Cleaner data boundary / typed adapters

@@ -1,5 +1,4 @@
 import { analyzeBetting, normCDF } from "./engine";
-import { EvaluationPanel } from "./EvaluationPanel";
 import type { LinesRow } from "../nhl-core/types";
 
 interface AnalysisPanelProps {
@@ -310,8 +309,6 @@ export function AnalysisPanel({ linesRows, resultsStatus, resultsRunning }: Anal
           <div style={{ marginTop: 6, color: "#6e7681" }}>First import: File -&gt; Import -&gt; Upload. After that, paste into the existing sheet at the next empty row.</div>
         </div>
       )}
-
-      <EvaluationPanel />
     </>
   );
 }

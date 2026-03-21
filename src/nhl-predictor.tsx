@@ -1,5 +1,8 @@
+import { useState } from "react";
+
 import { AnalysisPanel } from "./nhl-predictor/AnalysisPanel";
 import { DashboardHeader } from "./nhl-predictor/DashboardHeader";
+import { EvaluationPanel } from "./nhl-predictor/EvaluationPanel";
 import { ModelSetupPanel } from "./nhl-predictor/ModelSetupPanel";
 import { SchedulePanel } from "./nhl-predictor/SchedulePanel";
 import { SingleGamePanel } from "./nhl-predictor/SingleGamePanel";
@@ -7,6 +10,8 @@ import { SingleGameResults } from "./nhl-predictor/SingleGameResults";
 import { useNhlPredictorController } from "./nhl-predictor/useNhlPredictorController";
 
 export default function NHLModel() {
+  const [activeTab, setActiveTab] = useState<"predictor" | "evaluation">("predictor");
+  const [singleGameToolsOpen, setSingleGameToolsOpen] = useState(false);
   const {
     homeTeam,
     setHomeTeam,
@@ -98,107 +103,137 @@ export default function NHLModel() {
       <div style={{ position: "fixed", top: 0, left: 0, right: 0, height: 3, zIndex: 100, background: "linear-gradient(90deg,#0ea5e9,#38bdf8,#7dd3fc,#38bdf8,#0ea5e9)", animation: "glint 3s ease infinite" }} />
 
       <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-        <DashboardHeader
-          dataSource={dataSource}
-          fetchStatus={fetchStatus}
-          fetchError={fetchError}
-          liveStats={liveStats}
-          statsLastUpdated={statsLastUpdated}
-          onFetch={handleFetch}
-          showNstPanel={showNstPanel}
-          onToggleNstPanel={() => setShowNstPanel(!showNstPanel)}
-          nstStatus={nstStatus}
-          nstPaste={nstPaste}
-          onNstPasteChange={setNstPaste}
-          onParseNstData={parseNSTData}
-          onClearNstData={() => { setLiveStats({}); setStatsLastUpdated(""); setNstStatus("NST data cleared - using ESPN / estimates"); }}
-        />
-        <ModelSetupPanel
-          divFilter={divFilter}
-          onDivFilterChange={setDivFilter}
-          homeTeam={homeTeam}
-          awayTeam={awayTeam}
-          onHomeTeamChange={(value) => { setHomeTeam(value); setResult(null); }}
-          onAwayTeamChange={(value) => { setAwayTeam(value); setResult(null); }}
-          espnData={espnData}
-          liveStats={liveStats}
-          gameType={gameType}
-          onGameTypeChange={(value) => { setGameType(value); setResult(null); }}
-          homeB2B={homeB2B}
-          awayB2B={awayB2B}
-          onHomeB2BChange={(value) => { setHomeB2B(value); setResult(null); }}
-          onAwayB2BChange={(value) => { setAwayB2B(value); setResult(null); }}
-          hColor={hColor}
-          aColor={aColor}
-          hTeam={hTeam}
-          aTeam={aTeam}
-        />
-        <SingleGamePanel
-          running={running}
-          simCount={simCount}
-          onRunSim={runSim}
-          odds={odds}
-          oddsSource={oddsSource}
-          oddsStatus={oddsStatus}
-          onFetchOdds={handleFetchOdds}
-          manualOdds={manualOdds}
-          setManualOdds={setManualOdds}
-          setOddsSource={setOddsSource}
-          setOddsStatus={setOddsStatus}
-          setOdds={setOdds}
-          onApplyManualOdds={applyManualOdds}
-        />
-        {result && (
-          <SingleGameResults
-            result={result}
-            odds={odds}
-            homeTeam={homeTeam}
-            awayTeam={awayTeam}
-            hColor={hColor}
-            aColor={aColor}
-            hTeam={hTeam}
-            aTeam={aTeam}
-            dataSource={dataSource}
-            onExportSingleGame={exportSingleGame}
-          />
+        {activeTab === "predictor" ? (
+          <>
+            <DashboardHeader
+              dataSource={dataSource}
+              fetchStatus={fetchStatus}
+              fetchError={fetchError}
+              liveStats={liveStats}
+              statsLastUpdated={statsLastUpdated}
+              onFetch={handleFetch}
+              showNstPanel={showNstPanel}
+              onToggleNstPanel={() => setShowNstPanel(!showNstPanel)}
+              nstStatus={nstStatus}
+              nstPaste={nstPaste}
+              onNstPasteChange={setNstPaste}
+              onParseNstData={parseNSTData}
+              onClearNstData={() => { setLiveStats({}); setStatsLastUpdated(""); setNstStatus("NST data cleared - using ESPN / estimates"); }}
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+            />
+            <ModelSetupPanel
+              showSingleGameExtras={singleGameToolsOpen}
+              divFilter={divFilter}
+              onDivFilterChange={setDivFilter}
+              homeTeam={homeTeam}
+              awayTeam={awayTeam}
+              onHomeTeamChange={(value) => { setHomeTeam(value); setResult(null); }}
+              onAwayTeamChange={(value) => { setAwayTeam(value); setResult(null); }}
+              espnData={espnData}
+              liveStats={liveStats}
+              gameType={gameType}
+              onGameTypeChange={(value) => { setGameType(value); setResult(null); }}
+              homeB2B={homeB2B}
+              awayB2B={awayB2B}
+              onHomeB2BChange={(value) => { setHomeB2B(value); setResult(null); }}
+              onAwayB2BChange={(value) => { setAwayB2B(value); setResult(null); }}
+              hColor={hColor}
+              aColor={aColor}
+              hTeam={hTeam}
+              aTeam={aTeam}
+            />
+            <SchedulePanel
+              linesRows={linesRows}
+              scheduleStatus={scheduleStatus}
+              scheduleLoading={scheduleLoading}
+              goalieLoading={goalieLoading}
+              goalieRoster={goalieRoster}
+              showBulkPaste={showBulkPaste}
+              bulkPasteText={bulkPasteText}
+              bulkPasteStatus={bulkPasteStatus}
+              showLinesTable={showLinesTable}
+              simsRunning={simsRunning}
+              exportRunning={exportRunning}
+              resultsRunning={resultsRunning}
+              liveStats={liveStats}
+              onLoadSchedule={handleLoadSchedule}
+              onLoadGoalies={fetchGoalieRoster}
+              onToggleBulkPaste={() => {
+                setShowBulkPaste((prev) => !prev);
+                setBulkPasteStatus("");
+              }}
+              onRunAllSims={handleRunAllSims}
+              onExport={handleExport}
+              onFetchResults={fetchYesterdayResults}
+              onCloseBulkPaste={() => setShowBulkPaste(false)}
+              onBulkPasteTextChange={(value) => { setBulkPasteText(value); setBulkPasteStatus(""); }}
+              onApplyBulkPaste={handleBulkPaste}
+              onClearBulkPaste={() => { setBulkPasteText(""); setBulkPasteStatus(""); }}
+              onRunOneSim={handleRunOneSim}
+              onToggleEditing={toggleEditing}
+              onUpdateLinesField={updateLinesField}
+              setLinesRows={setLinesRows}
+            />
+            <SingleGamePanel
+              isOpen={singleGameToolsOpen}
+              onToggleOpen={() => setSingleGameToolsOpen((prev) => !prev)}
+              running={running}
+              simCount={simCount}
+              onRunSim={runSim}
+              odds={odds}
+              oddsSource={oddsSource}
+              oddsStatus={oddsStatus}
+              onFetchOdds={handleFetchOdds}
+              manualOdds={manualOdds}
+              setManualOdds={setManualOdds}
+              setOddsSource={setOddsSource}
+              setOddsStatus={setOddsStatus}
+              setOdds={setOdds}
+              onApplyManualOdds={applyManualOdds}
+            />
+            {result && (
+              <SingleGameResults
+                result={result}
+                odds={odds}
+                homeTeam={homeTeam}
+                awayTeam={awayTeam}
+                hColor={hColor}
+                aColor={aColor}
+                hTeam={hTeam}
+                aTeam={aTeam}
+                dataSource={dataSource}
+                onExportSingleGame={exportSingleGame}
+              />
+            )}
+            <AnalysisPanel
+              linesRows={linesRows}
+              resultsStatus={resultsStatus}
+              resultsRunning={resultsRunning}
+            />
+          </>
+        ) : (
+          <>
+            <DashboardHeader
+              dataSource={dataSource}
+              fetchStatus={fetchStatus}
+              fetchError={fetchError}
+              liveStats={liveStats}
+              statsLastUpdated={statsLastUpdated}
+              onFetch={handleFetch}
+              showNstPanel={showNstPanel}
+              onToggleNstPanel={() => setShowNstPanel(!showNstPanel)}
+              nstStatus={nstStatus}
+              nstPaste={nstPaste}
+              onNstPasteChange={setNstPaste}
+              onParseNstData={parseNSTData}
+              onClearNstData={() => { setLiveStats({}); setStatsLastUpdated(""); setNstStatus("NST data cleared - using ESPN / estimates"); }}
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+            />
+            <EvaluationPanel />
+          </>
         )}
-        <SchedulePanel
-          linesRows={linesRows}
-          scheduleStatus={scheduleStatus}
-          scheduleLoading={scheduleLoading}
-          goalieLoading={goalieLoading}
-          goalieRoster={goalieRoster}
-          showBulkPaste={showBulkPaste}
-          bulkPasteText={bulkPasteText}
-          bulkPasteStatus={bulkPasteStatus}
-          showLinesTable={showLinesTable}
-          simsRunning={simsRunning}
-          exportRunning={exportRunning}
-          resultsRunning={resultsRunning}
-          liveStats={liveStats}
-          onLoadSchedule={handleLoadSchedule}
-          onLoadGoalies={fetchGoalieRoster}
-          onToggleBulkPaste={() => {
-            setShowBulkPaste((prev) => !prev);
-            setBulkPasteStatus("");
-          }}
-          onRunAllSims={handleRunAllSims}
-          onExport={handleExport}
-          onFetchResults={fetchYesterdayResults}
-          onCloseBulkPaste={() => setShowBulkPaste(false)}
-          onBulkPasteTextChange={(value) => { setBulkPasteText(value); setBulkPasteStatus(""); }}
-          onApplyBulkPaste={handleBulkPaste}
-          onClearBulkPaste={() => { setBulkPasteText(""); setBulkPasteStatus(""); }}
-          onRunOneSim={handleRunOneSim}
-          onToggleEditing={toggleEditing}
-          onUpdateLinesField={updateLinesField}
-          setLinesRows={setLinesRows}
-        />
-        <AnalysisPanel
-          linesRows={linesRows}
-          resultsStatus={resultsStatus}
-          resultsRunning={resultsRunning}
-        />
       </div>
     </div>
   );

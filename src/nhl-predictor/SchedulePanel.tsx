@@ -102,7 +102,7 @@ export function SchedulePanel({
               {exportRunning ? "EXPORTING..." : "PREDICTIONS CSV"}
             </button>
           )}
-          <button onClick={onFetchResults} disabled={resultsRunning} style={{ background: resultsRunning ? "#161b22" : "#7c3aed", border: "none", borderRadius: 6, padding: "9px 16px", color: resultsRunning ? "#6e7681" : "#e9d5ff", fontSize: 11, fontWeight: 900, letterSpacing: 2, fontFamily: "monospace", cursor: resultsRunning ? "not-allowed" : "pointer", whiteSpace: "nowrap" }}>
+          <button onClick={onFetchResults} disabled={resultsRunning} style={{ background: resultsRunning ? "#161b22" : "linear-gradient(135deg,#0284c7,#0369a1)", border: "none", borderRadius: 6, padding: "9px 16px", color: resultsRunning ? "#6e7681" : "#e0f2fe", fontSize: 11, fontWeight: 900, letterSpacing: 2, fontFamily: "monospace", cursor: resultsRunning ? "not-allowed" : "pointer", whiteSpace: "nowrap" }}>
             {resultsRunning ? "FETCHING..." : "RESULTS CSV"}
           </button>
         </div>

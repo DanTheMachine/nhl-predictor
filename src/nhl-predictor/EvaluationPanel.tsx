@@ -80,7 +80,7 @@ export function EvaluationPanel() {
       <div style={{ background: "#161b22", border: "1px solid #30363d", borderRadius: 8, padding: 16 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap", marginBottom: 12 }}>
           <div style={{ fontSize: 12, color: "#b3c0cc", lineHeight: 1.7 }}>
-            Paste exported <strong style={{ color: "#3fb950" }}>Predictions</strong> and <strong style={{ color: "#a855f7" }}>Results</strong> CSVs, then score the model locally.
+            Paste exported <strong style={{ color: "#58a6ff" }}>Predictions</strong> and <strong style={{ color: "#58a6ff" }}>Results</strong> CSVs, or a merged tracking sheet with appended actual-result columns, then score the model locally.
           </div>
           <button
             onClick={handleEvaluate}
@@ -108,7 +108,7 @@ export function EvaluationPanel() {
               id="predictions-csv"
               value={predictionsText}
               onChange={(event) => setPredictionsText(event.target.value)}
-              placeholder='Paste the exported predictions CSV here'
+              placeholder="Paste the exported predictions CSV or your merged tracking sheet here"
               style={{ width: "100%", minHeight: 150, background: "#010409", border: "1px solid #30363d", borderRadius: 6, color: "#c8e8ff", padding: 10, fontFamily: "monospace", fontSize: 10, resize: "vertical" }}
             />
           </div>
@@ -130,7 +130,7 @@ export function EvaluationPanel() {
               id="results-csv"
               value={resultsText}
               onChange={(event) => setResultsText(event.target.value)}
-              placeholder='Paste the exported results CSV here'
+              placeholder='Paste the exported results CSV here, or the same merged sheet if it includes "Actual ..." columns'
               style={{ width: "100%", minHeight: 150, background: "#010409", border: "1px solid #30363d", borderRadius: 6, color: "#c8e8ff", padding: 10, fontFamily: "monospace", fontSize: 10, resize: "vertical" }}
             />
           </div>
@@ -170,6 +170,11 @@ export function EvaluationPanel() {
                       <div>Hit rate: <span style={{ color: "#7dd3fc" }}>{formatPct(market.hitRate)}</span></div>
                       <div>Units: <span style={{ color: market.units >= 0 ? "#3fb950" : "#f87171" }}>{formatUnits(market.units)}</span></div>
                       <div>ROI: <span style={{ color: market.roi >= 0 ? "#3fb950" : "#f87171" }}>{formatPct(market.roi)}</span></div>
+                      <div style={{ marginTop: 8, paddingTop: 8, borderTop: "1px solid #21262d" }}>Actual Bets: <span style={{ color: "#e6edf3" }}>{market.actualBets}</span></div>
+                      <div>Actual Record: <span style={{ color: "#e6edf3" }}>{market.actualWins}-{market.actualLosses}-{market.actualPushes}</span></div>
+                      <div>Actual Hit rate: <span style={{ color: "#7dd3fc" }}>{formatPct(market.actualHitRate)}</span></div>
+                      <div>Actual Units: <span style={{ color: market.actualUnits >= 0 ? "#3fb950" : "#f87171" }}>{formatUnits(market.actualUnits)}</span></div>
+                      <div>Actual ROI: <span style={{ color: market.actualRoi >= 0 ? "#3fb950" : "#f87171" }}>{formatPct(market.actualRoi)}</span></div>
                     </div>
                   </div>
                 ))}
