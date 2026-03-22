@@ -19,6 +19,12 @@ import {
   parseOddsFromEvent,
 } from "./api";
 import { analyzeBetting, mlAmerican, predictGame } from "./engine";
+import {
+  normalizePastedOddsText,
+  parsePastedOddsValue,
+  parsePastedPuckLine,
+  parsePastedTotalLine,
+} from "./oddsParsing";
 import { buildExportRow, downloadCSV, rowsToCSV } from "./export";
 
 const TEAM_NAME_MAP: Record<string, string> = {
@@ -826,16 +832,16 @@ export function useNhlPredictorController() {
         cursor += 1;
       }
 
-      if (dataLines.length < 5 || !isOddsLine(normalizeOddsText(dataLines[4]))) continue;
+      if (dataLines.length < 5 || !isOddsLine(normalizePastedOddsText(dataLines[4]))) continue;
 
-      const plLine = parsePuckLine(normalizeOddsText(dataLines[0]));
-      const plOdds = parseOddsValue(normalizeOddsText(dataLines[1]));
-      const normalizedTotalLine = normalizeOddsText(dataLines[2]);
+      const plLine = parsePastedPuckLine(normalizePastedOddsText(dataLines[0]));
+      const plOdds = parsePastedOddsValue(normalizePastedOddsText(dataLines[1]));
+      const normalizedTotalLine = normalizePastedOddsText(dataLines[2]);
       const ouMatch = normalizedTotalLine.match(/^([OoUu])\s*([\d.\s]+)/);
       const isOver = ouMatch ? ouMatch[1].toUpperCase() === "O" : true;
-      const ouLine = ouMatch ? parseFloat(ouMatch[2].replace(/\s/g, "")) : 5.5;
-      const ouOdds = parseOddsValue(normalizeOddsText(dataLines[3]));
-      const ml = parseOddsValue(normalizeOddsText(dataLines[4]));
+      const ouLine = parsePastedTotalLine(normalizedTotalLine);
+      const ouOdds = parsePastedOddsValue(normalizePastedOddsText(dataLines[3]));
+      const ml = parsePastedOddsValue(normalizePastedOddsText(dataLines[4]));
 
       blocks.push({ abbr, plLine, plOdds, ouLine, ouOdds, isOver, ml });
     }
