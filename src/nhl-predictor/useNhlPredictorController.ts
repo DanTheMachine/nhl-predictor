@@ -129,6 +129,10 @@ function parsePuckLine(raw: string): number {
   return match ? parseFloat(match[1]) : -1.5;
 }
 
+void normalizeOddsText;
+void parseOddsValue;
+void parsePuckLine;
+
 function isOddsLine(value: string): boolean {
   const trimmed = value.trim();
   return (
