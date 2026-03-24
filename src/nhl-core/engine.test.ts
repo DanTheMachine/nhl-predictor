@@ -96,6 +96,51 @@ describe('predictGame', () => {
     expect(adjusted.goalieEdge).toContain('+')
   })
 
+  it('does not apply the estimated-data scoring bump when both teams have live stats', () => {
+    const liveResult = predictGame({
+      homeTeam: 'BOS',
+      awayTeam: 'MTL',
+      gameType: 'Regular Season',
+      homeB2B: false,
+      awayB2B: false,
+      liveStats: {
+        BOS: {
+          cf: 54,
+          ff: 54,
+          xgf: 55,
+          pdo: 101,
+          goalieSV: 0.91,
+          shootingPct: 11,
+          ppPct: 28,
+          pkPct: 85,
+          gf: 3.1,
+          ga: 2.6,
+          srs: 0.5,
+          gp: 10,
+          lastUpdated: '2026-03-19T00:00:00Z',
+        },
+        MTL: {
+          cf: 50,
+          ff: 50,
+          xgf: 49,
+          pdo: 99,
+          goalieSV: 0.9,
+          shootingPct: 9.4,
+          ppPct: 21,
+          pkPct: 78,
+          gf: 2.9,
+          ga: 3.0,
+          srs: -0.1,
+          gp: 10,
+          lastUpdated: '2026-03-19T00:00:00Z',
+        },
+      },
+    })
+
+    expect(Number(liveResult.total)).toBeLessThan(7)
+    expect(Number(liveResult.total)).toBeGreaterThan(5.4)
+  })
+
   it('captures schedule disadvantage in the feature summary', () => {
     const result = predictGame({
       homeTeam: 'BOS',
@@ -207,6 +252,38 @@ describe('analyzeBetting', () => {
     expect(analysis.mlValueSide).toBe('away')
     expect(analysis.ouRec).toBe('under')
     expect(analysis.kellyAway).toBeGreaterThan(0)
+  })
+
+  it('can recommend the over when the projected total clears the market by enough', () => {
+    const analysis = analyzeBetting(
+      {
+        hWinProb: 0.54,
+        aWinProb: 0.46,
+        hGoals: '3.30',
+        aGoals: '3.00',
+        total: '6.30',
+        otProb: 0.18,
+        goalieEdge: '+2.0 SV pts',
+        hPDOLuck: 'Running hot',
+        aPDOLuck: 'Running hot',
+        isPlayoff: false,
+        features: [],
+      },
+      {
+        source: 'manual',
+        homeMoneyline: -120,
+        awayMoneyline: +100,
+        puckLine: -1.5,
+        puckLineHomeOdds: 165,
+        puckLineAwayOdds: -185,
+        overUnder: 5.5,
+        overOdds: -110,
+        underOdds: -110,
+      },
+    )
+
+    expect(analysis.ouRec).toBe('over')
+    expect(analysis.ouEdge).toBeGreaterThan(0.035)
   })
 })
 

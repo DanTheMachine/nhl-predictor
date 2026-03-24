@@ -2,6 +2,7 @@ import { Fragment } from "react";
 
 import { TEAMS } from "../nhl-core/data";
 import type { GoalieInfo, LinesRow, LiveTeamStats, OddsData } from "../nhl-core/types";
+import { isBulkPasteErrorStatus } from "./bulkPaste";
 import { analyzeBetting } from "./engine";
 
 interface SchedulePanelProps {
@@ -149,7 +150,7 @@ export function SchedulePanel({
             </div>
           </div>
           {bulkPasteStatus && (
-            <div style={{ marginTop: 10, fontSize: 12, color: bulkPasteStatus.startsWith("⚠") ? "#f87171" : "#3fb950", fontFamily: "monospace" }}>
+            <div style={{ marginTop: 10, fontSize: 12, color: isBulkPasteErrorStatus(bulkPasteStatus) ? "#f87171" : "#3fb950", fontFamily: "monospace" }}>
               {bulkPasteStatus}
             </div>
           )}
@@ -225,7 +226,7 @@ export function SchedulePanel({
                         {betting ? (betting.puckLineRec === "pass" ? "PASS" : betting.puckLineRec.toUpperCase()) : "-"}
                       </td>
                       <td style={{ padding: "6px 7px", borderBottom: "1px solid #21262d", color: betting && betting.ouRec !== "pass" ? "#3fb950" : "#6e7681", fontWeight: betting && betting.ouRec !== "pass" ? 700 : 400 }}>
-                        {betting ? (betting.ouRec === "pass" ? "PASS" : betting.ouRec.toUpperCase() + (betting.ouEdge !== 0 ? ` (${betting.ouEdge > 0 ? "+" : ""}${betting.ouEdge.toFixed(2)})` : "")) : "-"}
+                        {betting ? (betting.ouRec === "pass" ? "PASS" : `${betting.ouRec.toUpperCase()} (+${(Math.abs(betting.ouEdge) * 100).toFixed(1)}%)`) : "-"}
                       </td>
                       <td style={{ padding: "6px 10px", borderBottom: "1px solid #21262d", whiteSpace: "nowrap" }}>
                         <button onClick={() => onRunOneSim(idx)} style={{ background: hasSim ? "rgba(63,185,80,0.1)" : "rgba(88,166,255,0.1)", border: `1px solid ${hasSim ? "#3fb95055" : "#58a6ff55"}`, borderRadius: 4, padding: "3px 9px", color: hasSim ? "#3fb950" : "#58a6ff", fontSize: 10, fontWeight: 700, fontFamily: "monospace", cursor: "pointer" }}>

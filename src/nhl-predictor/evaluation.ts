@@ -83,6 +83,30 @@ export interface CalibrationBucket {
   avgPredicted: number;
 }
 
+export interface OuRecommendationSummary {
+  recommendation: "over" | "under" | "pass";
+  games: number;
+  wins: number;
+  losses: number;
+  pushes: number;
+  hitRate: number;
+  avgEdgePct: number;
+  units: number;
+  roi: number;
+}
+
+export interface OuEdgeBucketSummary {
+  label: string;
+  bets: number;
+  wins: number;
+  losses: number;
+  pushes: number;
+  hitRate: number;
+  avgEdgePct: number;
+  units: number;
+  roi: number;
+}
+
 export interface EvaluationSummary {
   matchedGames: number;
   unmatchedPredictions: number;
@@ -91,6 +115,8 @@ export interface EvaluationSummary {
   marketSummaries: MarketSummary[];
   thresholdSummaries: ThresholdSummary[];
   calibration: CalibrationBucket[];
+  ouRecommendationSummaries: OuRecommendationSummary[];
+  ouEdgeBuckets: OuEdgeBucketSummary[];
 }
 
 function parseCSV(text: string): string[][] {
@@ -178,6 +204,11 @@ function parseAbbr(teamLabel: string | undefined): string {
   return (teamLabel?.trim().split(/\s+/)[0] ?? "").toUpperCase();
 }
 
+function normalizeOuEdgePct(value: number | null): number | null {
+  if (value == null) return null;
+  return Math.abs(value) <= 1 ? value * 100 : value;
+}
+
 function calcProfit(odds: number, won: boolean, push: boolean): number {
   if (push) return 0;
   if (!won) return -1;
@@ -260,7 +291,7 @@ export function parsePredictionCsv(text: string): PredictionRecord[] {
           : row["O/U Rec"]?.toLowerCase() === "under"
             ? "under"
             : "pass",
-      ouEdge: parseNumber(row["O/U Edge"]),
+      ouEdge: normalizeOuEdgePct(parseNumber(row["O/U Edge"])),
       puckLineRec:
         row["Puck Line Rec"]?.toLowerCase() === "home -1.5" ||
         row["Puck Line Rec"]?.toLowerCase() === "home +1.5" ||
@@ -343,7 +374,7 @@ export function evaluatePredictionResults(
           market: "O/U",
           lookupKey: prediction.lookupKey,
           label: `${prediction.ouRec.toUpperCase()} ${prediction.vegaOU.toFixed(1)}`,
-          edgePct: Math.abs(prediction.ouEdge ?? 0) * 10,
+          edgePct: Math.abs(prediction.ouEdge ?? 0),
           odds,
           stake,
           hasExplicitStake: prediction.ouBetUnits != null,
@@ -435,6 +466,60 @@ export function evaluatePredictionResults(
     };
   });
 
+  const ouRecommendationSummaries: OuRecommendationSummary[] = (["over", "under", "pass"] as const).map((recommendation) => {
+    const recommendationGames = matchedPredictions.filter((prediction) => prediction.ouRec === recommendation);
+    const recommendationBets = bets.filter(
+      (bet) =>
+        bet.market === "O/U" &&
+        ((recommendation === "over" && bet.label.startsWith("OVER")) ||
+          (recommendation === "under" && bet.label.startsWith("UNDER"))),
+    );
+    const summary = summarizeBetGroup(recommendationBets);
+    const avgEdgePct =
+      recommendationGames.length > 0
+        ? recommendationGames.reduce((sum, prediction) => sum + Math.abs(prediction.ouEdge ?? 0), 0) / recommendationGames.length
+        : 0;
+
+    return {
+      recommendation,
+      games: recommendationGames.length,
+      wins: summary.wins,
+      losses: summary.losses,
+      pushes: summary.pushes,
+      hitRate: summary.hitRate,
+      avgEdgePct,
+      units: summary.units,
+      roi: summary.roi,
+    };
+  });
+
+  const ouEdgeRanges = [
+    { min: 0, max: 5, label: "0-5%" },
+    { min: 5, max: 10, label: "5-10%" },
+    { min: 10, max: 1000, label: "10%+" },
+  ];
+
+  const ouEdgeBuckets: OuEdgeBucketSummary[] = ouEdgeRanges.map((range) => {
+    const bucketBets = bets.filter(
+      (bet) => bet.market === "O/U" && bet.edgePct >= range.min && bet.edgePct < range.max,
+    );
+    const summary = summarizeBetGroup(bucketBets);
+    const avgEdgePct =
+      bucketBets.length > 0 ? bucketBets.reduce((sum, bet) => sum + bet.edgePct, 0) / bucketBets.length : 0;
+
+    return {
+      label: range.label,
+      bets: summary.bets,
+      wins: summary.wins,
+      losses: summary.losses,
+      pushes: summary.pushes,
+      hitRate: summary.hitRate,
+      avgEdgePct,
+      units: summary.units,
+      roi: summary.roi,
+    };
+  });
+
   return {
     matchedGames: matchedPredictions.length,
     unmatchedPredictions: predictions.length - matchedPredictions.length,
@@ -443,5 +528,7 @@ export function evaluatePredictionResults(
     marketSummaries: (["ML", "O/U", "PL"] as const).map((market) => summarizeMarket(market, bets)),
     thresholdSummaries,
     calibration,
+    ouRecommendationSummaries,
+    ouEdgeBuckets,
   };
 }

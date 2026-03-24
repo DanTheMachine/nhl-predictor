@@ -206,11 +206,11 @@ export function AnalysisPanel({ linesRows, resultsStatus, resultsRunning }: Anal
                       <div style={{ fontSize: 10, color: "#b3c0cc", marginBottom: 2 }}>Vegas line</div>
                       <div style={{ fontSize: 11, color: "#cae8ff", marginBottom: 6 }}>{odds.overUnder.toFixed(1)} ({odds.overOdds > 0 ? "+" : ""}{odds.overOdds} / {odds.underOdds > 0 ? "+" : ""}{odds.underOdds})</div>
                       <div style={{ fontSize: 10, color: "#b3c0cc", marginBottom: 2 }}>Model total</div>
-                      <div style={{ fontSize: 11, color: "#7dd3fc", marginBottom: 6 }}>{sim.total} <span style={{ color: edgeColor(Math.abs(betting.ouEdge)) }}>({betting.ouEdge > 0 ? "+" : ""}{betting.ouEdge.toFixed(2)} vs line)</span></div>
+                      <div style={{ fontSize: 11, color: "#7dd3fc", marginBottom: 6 }}>{sim.total} <span style={{ color: edgeColor(Math.abs(betting.ouEdge) * 100) }}>({(Math.abs(betting.ouEdge) * 100).toFixed(1)}% edge)</span></div>
                       <div style={{ borderTop: "1px solid #21262d", paddingTop: 6, marginTop: 2 }}>
                         <span style={{ fontSize: 10, color: "#b3c0cc" }}>Rec: </span>
-                        <span style={{ fontSize: 11, fontWeight: betting.ouRec !== "pass" ? 700 : 400, color: recColor(betting.ouRec, Math.abs(betting.ouEdge * 10)) }}>
-                          {betting.ouRec === "pass" ? "PASS" : `${betting.ouRec.toUpperCase()} +${(Math.abs(betting.ouEdge) * 10).toFixed(1)}%`}
+                        <span style={{ fontSize: 11, fontWeight: betting.ouRec !== "pass" ? 700 : 400, color: recColor(betting.ouRec, Math.abs(betting.ouEdge) * 100) }}>
+                          {betting.ouRec === "pass" ? "PASS" : `${betting.ouRec.toUpperCase()} +${(Math.abs(betting.ouEdge) * 100).toFixed(1)}%`}
                         </span>
                       </div>
                     </div>
@@ -230,7 +230,7 @@ export function AnalysisPanel({ linesRows, resultsStatus, resultsRunning }: Anal
                       <div style={{ fontSize: 10, lineHeight: 1.8 }}>
                         <div><span style={{ color: "#b3c0cc" }}>ML: </span><span style={{ color: recColor(betting.mlValueSide === "none" ? "pass" : "val", betting.mlValuePct) }}>{betting.mlValueSide === "none" ? "No edge" : `${betting.mlValueSide.toUpperCase()} +${betting.mlValuePct.toFixed(1)}%`}</span></div>
                         <div><span style={{ color: "#b3c0cc" }}>PL: </span><span style={{ color: recColor(betting.puckLineRec, betting.puckLineEdge) }}>{betting.puckLineRec === "pass" ? "No edge" : `${betting.puckLineRec.toUpperCase()} +${betting.puckLineEdge.toFixed(1)}%`}</span></div>
-                        <div><span style={{ color: "#b3c0cc" }}>O/U: </span><span style={{ color: recColor(betting.ouRec, Math.abs(betting.ouEdge * 10)) }}>{betting.ouRec === "pass" ? "No edge" : `${betting.ouRec.toUpperCase()} ${betting.ouEdge > 0 ? "+" : ""}${betting.ouEdge.toFixed(2)} goals (${(Math.abs(betting.ouEdge) * 10).toFixed(1)}%)`}</span></div>
+                        <div><span style={{ color: "#b3c0cc" }}>O/U: </span><span style={{ color: recColor(betting.ouRec, Math.abs(betting.ouEdge) * 100) }}>{betting.ouRec === "pass" ? "No edge" : `${betting.ouRec.toUpperCase()} +${(Math.abs(betting.ouEdge) * 100).toFixed(1)}%`}</span></div>
                         {(betting.kellyHome > 0 || betting.kellyAway > 0) && <div style={{ marginTop: 4, paddingTop: 4, borderTop: "1px solid #21262d" }}><span style={{ color: "#b3c0cc" }}>Kelly (this bet): </span><span style={{ color: "#f97316", fontWeight: 700 }}>{betting.mlValueSide === "home" ? `${(betting.kellyHome * 100).toFixed(1)}%` : betting.mlValueSide === "away" ? `${(betting.kellyAway * 100).toFixed(1)}%` : `${(Math.max(betting.kellyHome, betting.kellyAway) * 100).toFixed(1)}%`}</span><span style={{ color: "#4b5563", fontSize: 9 }}> of bankroll (1/4 Kelly)</span></div>}
                       </div>
                     </div>

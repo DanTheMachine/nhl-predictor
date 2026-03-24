@@ -97,7 +97,7 @@ describe('rowsToCSV', () => {
         total: '5.30',
         vegaOU: '5.5',
         ouRec: 'UNDER',
-        ouEdge: '-0.20',
+        ouEdge: '-4.8%',
         homeML: '-150',
         awayML: '+150',
         vegaHomeML: '-110',

@@ -25,6 +25,7 @@ import {
   parsePastedPuckLine,
   parsePastedTotalLine,
 } from "./oddsParsing";
+import { resolveBulkPasteTeamName } from "./bulkPaste";
 import { buildExportRow, downloadCSV, rowsToCSV } from "./export";
 
 const TEAM_NAME_MAP: Record<string, string> = {
@@ -104,7 +105,7 @@ function resolveTeamName(raw: string): string | null {
     .replace(/[*•]/g, "")
     .trim();
 
-  return TEAM_NAME_MAP[cleaned] ?? null;
+  return resolveBulkPasteTeamName(cleaned) ?? TEAM_NAME_MAP[cleaned] ?? null;
 }
 
 function normalizeOddsText(raw: string): string {
@@ -979,7 +980,7 @@ export function useNhlPredictorController() {
       result.aGoals,
       (parseFloat(result.hGoals) + parseFloat(result.aGoals)).toFixed(2),
       fmt(odds?.overUnder, 1),
-      bettingAnalysis ? (bettingAnalysis.ouEdge > 0 ? "OVER" : "UNDER") : "",
+      bettingAnalysis && bettingAnalysis.ouRec !== "pass" ? bettingAnalysis.ouRec.toUpperCase() : "",
       bettingAnalysis ? fmt(bettingAnalysis.ouEdge * 100, 1, "%") : "",
       mlAmerican(result.hWinProb),
       mlAmerican(result.aWinProb),

@@ -1,6 +1,16 @@
 import { ICE_CONDITIONS, TEAMS } from "./data";
 import type { BettingAnalysis, OddsData, PredictInput, PredictResult, TeamData } from "./types";
 
+const ESTIMATED_TOTAL_SCORING_CALIBRATION = 1.3;
+const LIVE_TOTAL_SCORING_CALIBRATION = 1.08;
+const ML_EDGE_THRESHOLD = 0.05;
+const ML_KELLY_THRESHOLD = 0.025;
+const WIN_PROB_REGRESSION = 0.6;
+
+function regressWinProbability(rawProb: number): number {
+  return 0.5 + (rawProb - 0.5) * WIN_PROB_REGRESSION;
+}
+
 export function predictGame({
   homeTeam,
   awayTeam,
@@ -17,6 +27,7 @@ export function predictGame({
   const aLive = liveStats?.[awayTeam];
   const h: TeamData = hLive ? { ...hBase, ...hLive } : { ...hBase };
   const a: TeamData = aLive ? { ...aBase, ...aLive } : { ...aBase };
+  const totalScoringCalibration = hLive && aLive ? LIVE_TOTAL_SCORING_CALIBRATION : ESTIMATED_TOTAL_SCORING_CALIBRATION;
 
   if (homeSVOverride != null) h.goalieSV = homeSVOverride;
   if (awaySVOverride != null) a.goalieSV = awaySVOverride;
@@ -40,10 +51,11 @@ export function predictGame({
     ((a.gf + h.ga) / 2) * (1 - xgfDiff * 1.2 - cfDiff * 0.4) * iceAdj * playoffFactor * (1 + aB2BPenalty) +
     (a.ppPct - h.pkPct) * 0.004 * ppAdj;
 
-  const hGoals = Math.max(0.8, hExpGoals);
-  const aGoals = Math.max(0.8, aExpGoals);
+  const hGoals = Math.max(0.8, hExpGoals * totalScoringCalibration);
+  const aGoals = Math.max(0.8, aExpGoals * totalScoringCalibration);
   const goalDiff = hGoals - aGoals + hfa;
-  const hWinProb = 1 / (1 + Math.exp(-goalDiff * 1.35));
+  const rawHWinProb = 1 / (1 + Math.exp(-goalDiff * 1.35));
+  const hWinProb = regressWinProbability(rawHWinProb);
   const aWinProb = 1 - hWinProb;
   const total = hGoals + aGoals;
   const otProb = Math.min(0.32, Math.max(0.16, 0.24 - Math.abs(goalDiff) * 0.05 + (isPlayoff ? 0.03 : 0)));
@@ -90,8 +102,12 @@ export function analyzeBetting(result: PredictResult, odds: OddsData): BettingAn
   const awayImpliedClean = awayImplied / vigSum;
   const homeEdge = result.hWinProb - homeImpliedClean;
   const awayEdge = result.aWinProb - awayImpliedClean;
-  const mlValueSide = homeEdge > 0.02 ? "home" : awayEdge > 0.02 ? "away" : "none";
-  const mlValuePct = Math.max(homeEdge, awayEdge) * 100;
+  const rawKellyHome = homeEdge > 0 ? (homeEdge / (1 - homeImpliedClean)) * 0.25 : 0;
+  const rawKellyAway = awayEdge > 0 ? (awayEdge / (1 - awayImpliedClean)) * 0.25 : 0;
+  const homeMlQualified = homeEdge > ML_EDGE_THRESHOLD && rawKellyHome > ML_KELLY_THRESHOLD;
+  const awayMlQualified = awayEdge > ML_EDGE_THRESHOLD && rawKellyAway > ML_KELLY_THRESHOLD;
+  const mlValueSide = homeMlQualified ? "home" : awayMlQualified ? "away" : "none";
+  const mlValuePct = Math.max(homeMlQualified ? homeEdge : 0, awayMlQualified ? awayEdge : 0) * 100;
 
   const projDiff = parseFloat(result.hGoals) - parseFloat(result.aGoals);
   const stdDev = 1.65;
@@ -116,10 +132,21 @@ export function analyzeBetting(result: PredictResult, odds: OddsData): BettingAn
   const puckLineEdge = Math.max(plHomeEdge, plAwayEdge) * 100;
 
   const projTotal = parseFloat(result.total);
-  const ouEdge = projTotal - odds.overUnder;
-  const ouRec = ouEdge > 0.3 ? "over" : ouEdge < -0.3 ? "under" : "pass";
-  const kellyHome = homeEdge > 0 ? (homeEdge / (1 - homeImpliedClean)) * 0.25 : 0;
-  const kellyAway = awayEdge > 0 ? (awayEdge / (1 - awayImpliedClean)) * 0.25 : 0;
+  const totalStdDev = 1.15;
+  const totalZ = (odds.overUnder - projTotal) / totalStdDev;
+  const overProb = 1 - normCDF(totalZ);
+  const underProb = 1 - overProb;
+  const overRaw = americanToImplied(odds.overOdds || -110);
+  const underRaw = americanToImplied(odds.underOdds || -110);
+  const ouSum = overRaw + underRaw;
+  const overImplied = ouSum > 0 ? overRaw / ouSum : 0.5;
+  const underImplied = ouSum > 0 ? underRaw / ouSum : 0.5;
+  const overEdge = overProb - overImplied;
+  const underEdge = underProb - underImplied;
+  const ouRec = overEdge > 0.035 ? "over" : underEdge > 0.035 ? "under" : "pass";
+  const ouEdge = ouRec === "over" ? overEdge : ouRec === "under" ? -underEdge : 0;
+  const kellyHome = homeMlQualified ? rawKellyHome : 0;
+  const kellyAway = awayMlQualified ? rawKellyAway : 0;
 
   return {
     homeImpliedProb: homeImpliedClean,

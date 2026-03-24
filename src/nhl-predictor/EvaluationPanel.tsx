@@ -213,6 +213,49 @@ export function EvaluationPanel() {
                 ))}
               </div>
             </div>
+
+            <div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: "#8b949e", letterSpacing: 3, marginBottom: 8 }}>O/U CALIBRATION</div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 10 }}>
+                {summary.ouRecommendationSummaries.map((bucket) => (
+                  <div key={bucket.recommendation} style={{ background: "#0d1117", border: "1px solid #21262d", borderRadius: 6, padding: 12 }}>
+                    <div style={{ fontSize: 12, fontWeight: 800, color: "#e6edf3", marginBottom: 8 }}>{bucket.recommendation.toUpperCase()}</div>
+                    <div style={{ fontSize: 11, color: "#b3c0cc", lineHeight: 1.8 }}>
+                      <div>Games: <span style={{ color: "#e6edf3" }}>{bucket.games}</span></div>
+                      <div>Avg edge: <span style={{ color: "#c4b5fd" }}>{bucket.avgEdgePct.toFixed(1)}%</span></div>
+                      {bucket.recommendation === "pass" ? (
+                        <div style={{ color: "#8b949e" }}>No bet tracked for PASS rows</div>
+                      ) : (
+                        <>
+                          <div>Record: <span style={{ color: "#e6edf3" }}>{bucket.wins}-{bucket.losses}-{bucket.pushes}</span></div>
+                          <div>Hit rate: <span style={{ color: "#7dd3fc" }}>{formatPct(bucket.hitRate)}</span></div>
+                          <div>Units: <span style={{ color: bucket.units >= 0 ? "#3fb950" : "#f87171" }}>{formatUnits(bucket.units)}</span></div>
+                          <div>ROI: <span style={{ color: bucket.roi >= 0 ? "#3fb950" : "#f87171" }}>{formatPct(bucket.roi)}</span></div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: "#8b949e", letterSpacing: 3, marginBottom: 8 }}>O/U EDGE BUCKETS</div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(190px,1fr))", gap: 10 }}>
+                {summary.ouEdgeBuckets.map((bucket) => (
+                  <div key={bucket.label} style={{ background: "#0d1117", border: "1px solid #21262d", borderRadius: 6, padding: 12 }}>
+                    <div style={{ fontSize: 12, fontWeight: 800, color: "#e6edf3", marginBottom: 8 }}>{bucket.label}</div>
+                    <div style={{ fontSize: 11, color: "#b3c0cc", lineHeight: 1.8 }}>
+                      <div>Bets: <span style={{ color: "#e6edf3" }}>{bucket.bets}</span></div>
+                      <div>Avg edge: <span style={{ color: "#c4b5fd" }}>{bucket.avgEdgePct.toFixed(1)}%</span></div>
+                      <div>Record: <span style={{ color: "#e6edf3" }}>{bucket.wins}-{bucket.losses}-{bucket.pushes}</span></div>
+                      <div>Hit rate: <span style={{ color: "#7dd3fc" }}>{formatPct(bucket.hitRate)}</span></div>
+                      <div>ROI: <span style={{ color: bucket.roi >= 0 ? "#3fb950" : "#f87171" }}>{formatPct(bucket.roi)}</span></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         )}
       </div>

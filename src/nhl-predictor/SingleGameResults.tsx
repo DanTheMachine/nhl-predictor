@@ -63,8 +63,8 @@ export function SingleGameResults({
             <div style={{ fontFamily: "'Barlow Condensed',Impact,sans-serif", fontSize: 34, color: "#38bdf8", fontWeight: 900 }}>{result.total}</div>
             {odds ? (
               (() => {
-                const ouEdge = parseFloat(result.total) - odds.overUnder;
-                const ouRec = ouEdge > 0.3 ? "OVER" : ouEdge < -0.3 ? "UNDER" : "PASS";
+                const betting = analyzeBetting(result, odds);
+                const ouRec = betting.ouRec === "pass" ? "PASS" : betting.ouRec.toUpperCase();
                 const recCol = ouRec === "OVER" ? "#38bdf8" : ouRec === "UNDER" ? "#f87171" : "#6e7681";
                 return (
                   <>
@@ -76,7 +76,7 @@ export function SingleGameResults({
                       <span style={{ fontSize: 10, color: "#6e7681", fontFamily: "monospace" }}>u{odds.overUnder.toFixed(1)} {odds.underOdds > 0 ? "+" : ""}{odds.underOdds}</span>
                     </div>
                     <div style={{ marginTop: 6, fontSize: 11, fontWeight: 700, color: recCol, fontFamily: "monospace", letterSpacing: 1 }}>
-                      {ouRec}{ouRec !== "PASS" ? ` (${ouEdge > 0 ? "+" : ""}${ouEdge.toFixed(2)})` : ""}
+                      {ouRec}{ouRec !== "PASS" ? ` (+${(Math.abs(betting.ouEdge) * 100).toFixed(1)}%)` : ""}
                     </div>
                   </>
                 );
@@ -272,8 +272,8 @@ export function SingleGameResults({
                 <div style={{ background: "rgba(100,180,255,0.2)", border: `1px solid ${ba.ouRec !== "pass" ? "rgba(74,222,128,0.2)" : "rgba(100,180,255,0.2)"}`, borderRadius: 5, padding: "12px 10px" }}>
                   <div style={{ fontSize: 11, color: "#7aaa5a", letterSpacing: 2, marginBottom: 8 }}>O/U {odds.overUnder}</div>
                   <div style={{ fontSize: 15, fontWeight: 900, fontFamily: "'Barlow Condensed',Impact,monospace", color: recColor(ba.ouRec), marginBottom: 4 }}>{ba.ouRec === "pass" ? "PASS" : ba.ouRec.toUpperCase()}</div>
-                  <div style={{ fontSize: 11, color: ba.ouEdge > 0 ? "#7dd3fc" : "#f87171", fontFamily: "monospace" }}>Model: {result.total} ({ba.ouEdge > 0 ? "+" : ""}{ba.ouEdge.toFixed(2)})</div>
-                  <div style={{ fontSize: 11, color: "#7aaa5a", marginTop: 6 }}>{ba.ouRec === "pass" ? "Within margin" : `${Math.abs(ba.ouEdge).toFixed(2)} goal gap`}</div>
+                  <div style={{ fontSize: 11, color: ba.ouRec === "over" ? "#7dd3fc" : ba.ouRec === "under" ? "#f87171" : "#94a3b8", fontFamily: "monospace" }}>Model: {result.total} ({(Math.abs(ba.ouEdge) * 100).toFixed(1)}% edge)</div>
+                  <div style={{ fontSize: 11, color: "#7aaa5a", marginTop: 6 }}>{ba.ouRec === "pass" ? "Within margin" : "Price-adjusted total edge"}</div>
                 </div>
               </div>
 
