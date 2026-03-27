@@ -117,6 +117,12 @@ Important fixes made recently:
     - today's lines / export workflow
     - single game tools
     - analysis
+- Bulk pasted sportsbook lines were hardened:
+  - extracted bulk paste parsing into tested helpers in `src/nhl-predictor/bulkPaste.ts`
+  - added regression coverage for pasted multiline sportsbook formats and team matching
+  - fixed a parsing bug where single-digit rotation numbers like `1`, `2`, `3` were treated as odds data instead of game numbers
+  - made home/away puck-line direction derive from the loaded home team block
+  - improved schedule-table rendering so puck-line odds display more clearly and edit inputs refresh after bulk updates
 
 Docs updated:
 - `RUNNING_THE_MODEL.md`
@@ -134,6 +140,7 @@ Current state:
 - Naming is clearer with `nhl-core`
 - Single-game tools now sit below the today's-lines/export workflow
 - Legacy CSV rows may have blank evaluation columns where the old export format lacked recoverable market odds
+- Bulk odds paste now supports single-digit and multi-digit rotation numbers and surfaces unmatched loaded games more clearly
 
 Known follow-up priorities discussed:
 1. Cleaner data boundary / typed adapters

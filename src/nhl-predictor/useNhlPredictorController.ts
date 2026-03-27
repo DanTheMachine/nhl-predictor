@@ -19,13 +19,7 @@ import {
   parseOddsFromEvent,
 } from "./api";
 import { analyzeBetting, mlAmerican, predictGame } from "./engine";
-import {
-  normalizePastedOddsText,
-  parsePastedOddsValue,
-  parsePastedPuckLine,
-  parsePastedTotalLine,
-} from "./oddsParsing";
-import { resolveBulkPasteTeamName } from "./bulkPaste";
+import { applyBulkPasteToLinesRows, resolveBulkPasteTeamName } from "./bulkPaste";
 import { buildExportRow, downloadCSV, rowsToCSV } from "./export";
 
 const TEAM_NAME_MAP: Record<string, string> = {
@@ -97,6 +91,8 @@ const TEAM_NAME_MAP: Record<string, string> = {
   jets: "WPG",
 };
 
+void TEAM_NAME_MAP;
+
 function resolveTeamName(raw: string): string | null {
   const cleaned = raw
     .toLowerCase()
@@ -107,6 +103,8 @@ function resolveTeamName(raw: string): string | null {
 
   return resolveBulkPasteTeamName(cleaned) ?? TEAM_NAME_MAP[cleaned] ?? null;
 }
+
+void resolveTeamName;
 
 function normalizeOddsText(raw: string): string {
   return raw
@@ -156,6 +154,10 @@ function isTvOrTime(value: string): boolean {
     )
   );
 }
+
+void isOddsLine;
+void isGameNumber;
+void isTvOrTime;
 
 export function useNhlPredictorController() {
   const [homeTeam, setHomeTeam] = useState<string>("BOS");
@@ -789,110 +791,11 @@ export function useNhlPredictorController() {
       setBulkPasteStatus("Load today's games first");
       return;
     }
+    const result = applyBulkPasteToLinesRows(linesRows, bulkPasteText);
+    setLinesRows(result.updatedRows);
+    setBulkPasteStatus(result.status);
 
-    const rawLines = bulkPasteText
-      .split("\n")
-      .map((line) => line.trim())
-      .filter(Boolean);
-
-    interface TeamBlock {
-      abbr: string;
-      plLine: number;
-      plOdds: number;
-      ouLine: number;
-      ouOdds: number;
-      isOver: boolean;
-      ml: number;
-    }
-
-    const blocks: TeamBlock[] = [];
-    let cursor = 0;
-
-    while (cursor < rawLines.length) {
-      const line = rawLines[cursor];
-
-      if (isTvOrTime(line) || isGameNumber(line)) {
-        cursor += 1;
-        continue;
-      }
-
-      const abbr = resolveTeamName(line);
-      if (!abbr) {
-        cursor += 1;
-        continue;
-      }
-
-      cursor += 1;
-      if (cursor < rawLines.length && isGameNumber(rawLines[cursor])) cursor += 1;
-
-      const dataLines: string[] = [];
-      while (cursor < rawLines.length && dataLines.length < 5) {
-        const dataLine = rawLines[cursor];
-        if (isTvOrTime(dataLine) || resolveTeamName(dataLine)) break;
-        if (isGameNumber(dataLine)) {
-          cursor += 1;
-          continue;
-        }
-        dataLines.push(dataLine);
-        cursor += 1;
-      }
-
-      if (dataLines.length < 5 || !isOddsLine(normalizePastedOddsText(dataLines[4]))) continue;
-
-      const plLine = parsePastedPuckLine(normalizePastedOddsText(dataLines[0]));
-      const plOdds = parsePastedOddsValue(normalizePastedOddsText(dataLines[1]));
-      const normalizedTotalLine = normalizePastedOddsText(dataLines[2]);
-      const ouMatch = normalizedTotalLine.match(/^([OoUu])\s*([\d.\s]+)/);
-      const isOver = ouMatch ? ouMatch[1].toUpperCase() === "O" : true;
-      const ouLine = parsePastedTotalLine(normalizedTotalLine);
-      const ouOdds = parsePastedOddsValue(normalizePastedOddsText(dataLines[3]));
-      const ml = parsePastedOddsValue(normalizePastedOddsText(dataLines[4]));
-
-      blocks.push({ abbr, plLine, plOdds, ouLine, ouOdds, isOver, ml });
-    }
-
-    if (blocks.length < 2) {
-      setBulkPasteStatus(`Could only parse ${blocks.length} team(s) - check format`);
-      return;
-    }
-
-    let updated = 0;
-    const newRows = linesRows.map((row) => {
-      const awayBlock = blocks.find((block) => block.abbr === row.game.awayAbbr);
-      const homeBlock = blocks.find((block) => block.abbr === row.game.homeAbbr);
-      if (!awayBlock || !homeBlock) return row;
-
-      const overOdds = awayBlock.isOver
-        ? awayBlock.ouOdds
-        : homeBlock.isOver
-          ? homeBlock.ouOdds
-          : -110;
-      const underOdds = !awayBlock.isOver
-        ? awayBlock.ouOdds
-        : !homeBlock.isOver
-          ? homeBlock.ouOdds
-          : -110;
-
-      const newOdds: OddsData = {
-        source: "manual",
-        homeMoneyline: homeBlock.ml,
-        awayMoneyline: awayBlock.ml,
-        puckLine: -awayBlock.plLine,
-        puckLineHomeOdds: homeBlock.plOdds,
-        puckLineAwayOdds: awayBlock.plOdds,
-        overUnder: awayBlock.ouLine,
-        overOdds,
-        underOdds,
-      };
-
-      updated += 1;
-      return { ...row, editedOdds: newOdds, simResult: null };
-    });
-
-    setLinesRows(newRows);
-    setBulkPasteStatus(`Updated ${updated} of ${linesRows.length} game(s) - ${blocks.length} teams parsed`);
-
-    if (updated > 0) {
+    if (result.updatedGames > 0) {
       setShowBulkPaste(false);
       setBulkPasteText("");
     }

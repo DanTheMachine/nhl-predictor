@@ -210,9 +210,17 @@ export function SchedulePanel({
                         let label = "";
                         if (valueIndex === 3) label = direction <= 0 ? "H-1.5 " : "H+1.5 ";
                         if (valueIndex === 4) label = direction <= 0 ? "A+1.5 " : "A-1.5 ";
+                        const formattedValue =
+                          value == null
+                            ? "-"
+                            : valueIndex === 2
+                              ? value.toFixed(1)
+                              : valueIndex >= 3
+                                ? `${value > 0 ? "+" : ""}${value} (${label.trim()})`
+                                : `${value > 0 ? "+" : ""}${value}`;
                         return (
                           <td key={valueIndex} style={{ padding: "6px 7px", borderBottom: "1px solid #21262d", color: value !== undefined ? "#cae8ff" : "#3d444d", fontFamily: "monospace", whiteSpace: "nowrap", fontSize: 11 }}>
-                            {value !== undefined ? label + (valueIndex === 2 ? value.toFixed(1) : `${value > 0 ? "+" : ""}${value}`) : "-"}
+                            {formattedValue}
                           </td>
                         );
                       })}
@@ -307,6 +315,7 @@ export function SchedulePanel({
                                 <div style={{ fontSize: 9, fontWeight: 600, color: "#8b949e", marginBottom: 4, letterSpacing: 1 }}>{label}</div>
                                 <input
                                   type="text"
+                                  key={`${idx}-${field}-${odds?.[field] ?? ""}`}
                                   defaultValue={odds?.[field] != null && odds[field] !== 0 ? String(odds[field]) : ""}
                                   placeholder={placeholder}
                                   onBlur={(e) => onUpdateLinesField(idx, field, e.target.value)}
