@@ -52,11 +52,17 @@ npm run test:e2e
 
 ## Recent Product Behavior
 
+- Seeded estimated team inputs were refreshed to 2026 values as of `3/30/26`.
+- The default data-source banner now says `ESTIMATED - 2026 values as of 3/30/26 - click Fetch to load live stats`.
 - `LOAD GOALIES` now auto-applies estimated goalie overrides.
 - Normal-rest teams use the top games-started goalie.
 - B2B teams use the second-most-started goalie when available.
 - The schedule table shows compact goalie tags like `BUF 9.10 - 2nd`.
 - The goalie editor highlights only the active goalie in green, even when two goalies share the same save percentage.
+- `MODEL EVALUATION` now accepts:
+  - standard exported CSVs
+  - merged / cumulative spreadsheet pastes with extra rows and extra columns
+  - headerless tab-delimited results rows in the results panel
 - Best Bets strength grading is now market-specific:
   - ML: `MED` at `8.5%`, `STRONG` at `11%`
   - PL: `MED` at `6%`, `STRONG` at `8%`

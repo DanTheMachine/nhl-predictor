@@ -242,6 +242,11 @@ What it does:
 - shows ROI, units, and hit rate by market
 - shows summaries by edge threshold
 - shows simple calibration buckets for predicted win probabilities
+- accepts more than just clean exported CSVs:
+  - merged tracking sheets with prepended summary rows and appended actual-result columns
+  - tab-delimited spreadsheet pastes
+  - headerless tab-delimited results rows in the results panel when they are in the shape:
+    - `date, home, away, home goals, away goals, winner, total, lookupKey`
 
 Recommended workflow:
 
@@ -261,6 +266,7 @@ Important note:
 
 - O/U and puck-line ROI depend on the newer predictions export format that includes the added market odds columns
 - if you evaluate older prediction exports, moneyline grading may still work, but O/U and puck-line ROI can be incomplete
+- the estimated fallback dataset shown before live fetches now reflects 2026 values as of `3/30/26`
 
 ## 8. Single-Game Workflow
 

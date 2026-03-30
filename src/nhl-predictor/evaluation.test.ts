@@ -19,9 +19,18 @@ Date,Game Time,Home,Away,Home Win %,Away Win %,Home Goals,Away Goals,Model Total
 03/19/2026,7:00 PM EDT,OTT Senators,NYI Islanders,60.3%,39.7%,3.08,2.44,5.52,6.0,UNDER,-5.1%,-152,+152,-125,+115,,,,,,+5.9%,-5.9%,HOME ML,3.2%,HOME -1.5,+7.4%,53.0%,48.1%,54.5%,46.3%,.891,.917,,,23.7%,16.0%,72.4%,81.1%,99.2,100.6,ESPN,20260319OTTNYI,3,2,OTT,5,1,1,0,,,
 03/20/2026,7:00 PM EDT,TOR Maple Leafs,CAR Hurricanes,18.0%,82.0%,2.28,3.71,5.99,6.0,PASS,-0.4%,+456,-456,+185,-205,+1.0,-140,+130,-115,+105,-16.3%,+16.3%,AWAY ML,11.9%,AWAY -1.5,+7.2%,45.6%,59.8%,47.6%,55.5%,.899,.901,,,19.7%,22.6%,83.0%,80.0%,100.2,99.1,ESPN,20260320TORCAR,,,,,,,,,,x`;
 
+const cumulativeSpreadsheetTsv = `Summary\tThrough 03/30/2026
+Date\tGame Time\tHome\tAway\tHome Win %\tAway Win %\tHome Goals\tAway Goals\tModel Total\tVegas O/U\tO/U Rec\tO/U Edge\tHome ML (Model)\tAway ML (Model)\tVegas Home ML\tVegas Away ML\tVegas Puck Line\tHome PL Odds\tAway PL Odds\tOver Odds\tUnder Odds\tHome ML Edge\tAway ML Edge\tML Value Side\tML Kelly %\tPuck Line Rec\tPuck Line Edge\tHome CF%\tAway CF%\tHome xGF%\tAway xGF%\tHome SV%\tAway SV%\tHome Goalie Override\tAway Goalie Override\tHome PP%\tAway PP%\tHome PK%\tAway PK%\tHome PDO\tAway PDO\tOdds Source\tLookupKey\tActual Home Goals\tActual Away Goals\tActual Winner\tActual Total\tML Hit\tO/U Hit\tPL Hit\tML Bet\tO/U Bet\tPL Bet
+03/20/2026\t7:00 PM EDT\tTOR Maple Leafs\tCAR Hurricanes\t18.0%\t82.0%\t2.28\t3.71\t5.99\t6.0\tPASS\t-0.01\t+456\t-456\t+185\t-205\t+1.0\t-140\t+130\t-115\t+105\t-16.3%\t+16.3%\tAWAY ML\t11.9%\tAWAY -1.5\t+7.2%\t45.6%\t59.8%\t47.6%\t55.5%\t.899\t.901\t\t\t19.7%\t22.6%\t83.0%\t80.0%\t100.2\t99.1\tESPN\t20260320TORCAR\t3\t4\tCAR\t7\t1\t\t0\t\t\t1
+03/20/2026\t7:00 PM EDT\tWSH Capitals\tNJD Devils\t76.7%\t23.3%\t2.82\t2.46\t5.27\t6.0\tUNDER\t-0.73\t-330\t+330\t-130\t+120\t-1.0\t+195\t-225\t+100\t-110\t+21.3%\t-21.3%\tHOME ML\t12.0%\tPASS\t—\t50.5%\t51.0%\t51.2%\t49.3%\t.915\t.903\t\t\t16.4%\t19.6%\t78.5%\t79.7%\t101.4\t97.0\tESPN\t20260320WSHNJD\t2\t1\tWSH\t3\t1\t1\t\t1\t\t`;
+
 const weightedBetSpreadsheetCsv = `Date,Game Time,Home,Away,Home Win %,Away Win %,Home Goals,Away Goals,Model Total,Vegas O/U,O/U Rec,O/U Edge,Home ML (Model),Away ML (Model),Vegas Home ML,Vegas Away ML,Vegas Puck Line,Home PL Odds,Away PL Odds,Over Odds,Under Odds,Home ML Edge,Away ML Edge,ML Value Side,ML Kelly %,Puck Line Rec,Puck Line Edge,Home CF%,Away CF%,Home xGF%,Away xGF%,Home SV%,Away SV%,Home Goalie Override,Away Goalie Override,Home PP%,Away PP%,Home PK%,Away PK%,Home PDO,Away PDO,Odds Source,LookupKey,Actual Home Goals,Actual Away Goals,Actual Winner,Actual Total,ML Hit,O/U Hit,PL,ML Bet,O/U Bet,PL Bet
 03/19/2026,7:00 PM ET,COL Avalanche,CHI Blackhawks,60.0%,40.0%,3.20,2.10,5.30,5.5,UNDER,-4.8%,-150,+150,-110,+100,-1.5,+130,-150,-110,-110,+7.5%,-7.5%,HOME ML,3.1%,HOME -1.5,+4.5%,56.4%,45.0%,55.8%,44.2%,.926,.903,-,-,25.5%,18.0%,83.0%,76.0%,101.3,98.7,ESPN,20260319COLCHI,4,2,COL,6,1,0,1,2,1.5,
 03/19/2026,8:00 PM ET,BOS Bruins,TOR Maple Leafs,54.0%,46.0%,3.10,2.80,5.90,6.0,OVER,+6.2%,-117,+117,+105,-125,+1.5,-165,+145,-105,-115,+5.2%,-5.2%,HOME ML,2.2%,PASS,-,49.0%,45.6%,46.4%,47.6%,.914,.899,-,-,25.6%,19.7%,77.2%,83.0%,101.9,100.2,ESPN,20260319BOSTOR,2,5,TOR,7,0,1,0,,,`;
+
+const headerlessResultsTsv = `03-06-2026\tDET\tFLA\t1\t3\tFLA\t4\t20260306DETFLA
+03-06-2026\tDAL\tCOL\t4\t5\tCOL\t9\t20260306DALCOL
+03-06-2026\tCHI\tVAN\t3\t6\tVAN\t9\t20260306CHIVAN`;
 
 describe("CSV evaluation parsing", () => {
   it("parses prediction and results rows from exported CSV text", () => {
@@ -48,6 +57,19 @@ describe("CSV evaluation parsing", () => {
     expect(results[1].winner).toBe("");
   });
 
+  it("parses cumulative tracking sheets pasted as tab-delimited text", () => {
+    const predictions = parsePredictionCsv(cumulativeSpreadsheetTsv);
+    const results = parseResultsCsv(cumulativeSpreadsheetTsv);
+
+    expect(predictions).toHaveLength(2);
+    expect(predictions[0].lookupKey).toBe("20260320TORCAR");
+    expect(predictions[0].puckLineBetUnits).toBe(1);
+    expect(predictions[1].puckLineEdge).toBeNull();
+    expect(results).toHaveLength(2);
+    expect(results[0].winner).toBe("CAR");
+    expect(results[1].total).toBe(3);
+  });
+
   it("parses numeric stake sizes from ML Bet, O/U Bet, and PL Bet columns", () => {
     const predictions = parsePredictionCsv(weightedBetSpreadsheetCsv);
 
@@ -55,6 +77,15 @@ describe("CSV evaluation parsing", () => {
     expect(predictions[0].ouBetUnits).toBe(1.5);
     expect(predictions[0].puckLineBetUnits).toBeNull();
     expect(predictions[1].mlBetUnits).toBeNull();
+  });
+
+  it("parses headerless tab-delimited results exports", () => {
+    const results = parseResultsCsv(headerlessResultsTsv);
+
+    expect(results).toHaveLength(3);
+    expect(results[0].lookupKey).toBe("20260306DETFLA");
+    expect(results[0].winner).toBe("FLA");
+    expect(results[1].total).toBe(9);
   });
 });
 

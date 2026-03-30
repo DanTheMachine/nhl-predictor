@@ -150,7 +150,7 @@ export function DashboardHeader({
                   ? fetchStatus
                   : Object.keys(liveStats).length > 0
                     ? `LIVE - ${Object.keys(liveStats).length} teams - updated ${statsLastUpdated}`
-                    : "ESTIMATED - 2024-25 approximations - click Fetch to load live stats"}
+                    : "ESTIMATED - 2026 values as of 3/30/26 - click Fetch to load live stats"}
             </span>
           </div>
           {fetchError && <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 4 }}>Warning: {fetchError}</div>}

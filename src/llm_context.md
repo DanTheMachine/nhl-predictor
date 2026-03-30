@@ -77,6 +77,13 @@ Major work completed:
   - matched vs unmatched game counts
 - Core logic lives in `src/nhl-predictor/evaluation.ts`.
 - Tests for this logic live in `src/nhl-predictor/evaluation.test.ts`.
+- Evaluator import support has since been widened:
+  - still accepts standard exported predictions CSV and results CSV files
+  - accepts merged tracking sheets with prepended summary rows and appended actual-result columns
+  - accepts tab-delimited spreadsheet pastes in the predictions area
+  - accepts headerless tab-delimited results rows in the shape:
+    - `date, home, away, home goals, away goals, winner, total, lookupKey`
+  - treats em dash-style placeholders in pasted sheets as blank numeric fields instead of parse failures
 
 4. CSV export improvements
 - Prediction export now includes additional market columns needed for evaluation:
@@ -141,6 +148,16 @@ Major work completed:
 - This was tuned iteratively to reduce overclassification of ML bets as `STRONG` on large slates while keeping ML medium strength slightly looser than the first conservative pass.
 
 Important fixes made recently:
+- Refreshed seeded default team stats in `src/nhl-core/data.ts` to 2026 values as of `3/30/26`:
+  - updated seeded `cf`, `ff`, `xgf`, `goalieSV`, `shootingPct`, and `pdo` for all 32 teams from the latest pasted advanced-stats import
+  - updated seeded `gf` / `ga` to per-game values derived from the pasted `GF`, `GA`, and `GP` columns
+  - intentionally left `ppPct`, `pkPct`, and `srs` unchanged because they were not part of that import
+- Updated the estimated-data banner in `DashboardHeader.tsx` from the old `2024-25 approximations` wording to:
+  - `ESTIMATED - 2026 values as of 3/30/26 - click Fetch to load live stats`
+- Hardened evaluation parsing in `src/nhl-predictor/evaluation.ts`:
+  - CSV parser now accepts both comma-separated and tab-delimited input
+  - results parsing now falls back to headerless result rows when no header row is present
+  - added regression coverage for cumulative spreadsheet pastes and headerless results pastes in `src/nhl-predictor/evaluation.test.ts`
 - Playwright config was changed from `npm.cmd` to `npm run ...` for GitHub Linux runner compatibility.
 - Fixed a real UI bug in `ModelSetupPanel.tsx`:
   - team select used `"Eastern"` / `"Western"`
@@ -176,9 +193,14 @@ Current state:
 - Project is on GitHub
 - GitHub Actions is set up and passing
 - Evaluation workflow exists in-app
+- Evaluation import is more forgiving than the initial implementation:
+  - clean CSV exports still work
+  - cumulative spreadsheet pastes now work
+  - headerless results pastes now work
 - Architecture is much cleaner than the original monolith
 - Naming is clearer with `nhl-core`
 - Single-game tools now sit below the today's-lines/export workflow
+- Seeded estimated team inputs now reflect 2026 values as of `March 30, 2026`
 - Legacy CSV rows may have blank evaluation columns where the old export format lacked recoverable market odds
 - Bulk odds paste now supports single-digit and multi-digit rotation numbers and surfaces unmatched loaded games more clearly
 - Loaded goalie rosters now directly influence the daily slate workflow through estimated overrides

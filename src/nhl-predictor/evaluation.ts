@@ -139,7 +139,7 @@ function parseCSV(text: string): string[][] {
       continue;
     }
 
-    if (char === "," && !inQuotes) {
+    if ((char === "," || char === "\t") && !inQuotes) {
       currentRow.push(currentCell);
       currentCell = "";
       continue;
@@ -191,10 +191,25 @@ function rowsToObjects(text: string, requiredHeaders: string[]): Record<string, 
   });
 }
 
+function isLikelyHeaderlessResultsRow(row: string[]): boolean {
+  if (row.length < 8) return false;
+  const [date, home, away, homeGoals, awayGoals, winner, total, lookupKey] = row.map((cell) => cell.trim());
+  return (
+    /^\d{2}[-/]\d{2}[-/]\d{4}$/.test(date) &&
+    /^[A-Z]{2,4}$/.test(home) &&
+    /^[A-Z]{2,4}$/.test(away) &&
+    /^-?\d+(\.\d+)?$/.test(homeGoals) &&
+    /^-?\d+(\.\d+)?$/.test(awayGoals) &&
+    /^[A-Z]{2,4}$/.test(winner) &&
+    /^-?\d+(\.\d+)?$/.test(total) &&
+    /^\d{8}[A-Z]{6,8}$/.test(lookupKey)
+  );
+}
+
 function parseNumber(value: string | undefined): number | null {
   if (!value) return null;
   const trimmed = value.trim();
-  if (!trimmed || trimmed === "-") return null;
+  if (!trimmed || trimmed === "-" || trimmed === "—") return null;
   const normalized = trimmed.replace(/[%,$]/g, "");
   const parsed = parseFloat(normalized);
   return Number.isNaN(parsed) ? null : parsed;
@@ -307,22 +322,35 @@ export function parsePredictionCsv(text: string): PredictionRecord[] {
 }
 
 export function parseResultsCsv(text: string): ResultRecord[] {
-  return rowsToObjects(text, ["LookupKey"])
-    .filter((row) => row["LookupKey"]?.trim())
-    .map((row) => {
-      const homeGoalsColumn = "Actual Home Goals" in row ? "Actual Home Goals" : "Home Goals";
-      const awayGoalsColumn = "Actual Away Goals" in row ? "Actual Away Goals" : "Away Goals";
-      const winnerColumn = "Actual Winner" in row ? "Actual Winner" : "Winner";
-      const totalColumn = "Actual Total" in row ? "Actual Total" : "Total";
+  const structuredRows = rowsToObjects(text, ["LookupKey"]);
+  if (structuredRows.length > 0) {
+    return structuredRows
+      .filter((row) => row["LookupKey"]?.trim())
+      .map((row) => {
+        const homeGoalsColumn = "Actual Home Goals" in row ? "Actual Home Goals" : "Home Goals";
+        const awayGoalsColumn = "Actual Away Goals" in row ? "Actual Away Goals" : "Away Goals";
+        const winnerColumn = "Actual Winner" in row ? "Actual Winner" : "Winner";
+        const totalColumn = "Actual Total" in row ? "Actual Total" : "Total";
 
-      return {
-        lookupKey: row["LookupKey"] ?? "",
-        homeGoals: parseNumber(row[homeGoalsColumn]) ?? 0,
-        awayGoals: parseNumber(row[awayGoalsColumn]) ?? 0,
-        winner: (row[winnerColumn] ?? "").toUpperCase(),
-        total: parseNumber(row[totalColumn]) ?? 0,
-      };
-    });
+        return {
+          lookupKey: row["LookupKey"] ?? "",
+          homeGoals: parseNumber(row[homeGoalsColumn]) ?? 0,
+          awayGoals: parseNumber(row[awayGoalsColumn]) ?? 0,
+          winner: (row[winnerColumn] ?? "").toUpperCase(),
+          total: parseNumber(row[totalColumn]) ?? 0,
+        };
+      });
+  }
+
+  return parseCSV(text.trim())
+    .filter(isLikelyHeaderlessResultsRow)
+    .map((row) => ({
+      lookupKey: row[7]?.trim() ?? "",
+      homeGoals: parseNumber(row[3]) ?? 0,
+      awayGoals: parseNumber(row[4]) ?? 0,
+      winner: (row[5] ?? "").trim().toUpperCase(),
+      total: parseNumber(row[6]) ?? 0,
+    }));
 }
 
 export function evaluatePredictionResults(
