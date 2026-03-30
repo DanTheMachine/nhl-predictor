@@ -9,8 +9,8 @@ import type {
 
 const ESTIMATED_TOTAL_SCORING_CALIBRATION = 1.3;
 const LIVE_TOTAL_SCORING_CALIBRATION = 1.08;
-const ML_EDGE_THRESHOLD = 0.05;
-const ML_KELLY_THRESHOLD = 0.025;
+const ML_EDGE_THRESHOLD = 0.07;
+const ML_KELLY_THRESHOLD = 0.04;
 const WIN_PROB_REGRESSION = 0.6;
 
 function regressWinProbability(rawProb: number): number {

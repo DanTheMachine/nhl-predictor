@@ -21,6 +21,7 @@ import {
 import { analyzeBetting, mlAmerican, predictGame } from "./engine";
 import { applyBulkPasteToLinesRows, resolveBulkPasteTeamName } from "./bulkPaste";
 import { buildExportRow, downloadCSV, rowsToCSV } from "./export";
+import { applyEstimatedGoalieOverrides } from "./goalieSelection";
 
 const TEAM_NAME_MAP: Record<string, string> = {
   "anaheim ducks": "ANA",
@@ -451,18 +452,16 @@ export function useNhlPredictorController() {
         setFetchStatus("Refreshing back-to-back detection...");
         const allAbbrs = [...new Set(linesRows.flatMap((row) => [row.game.homeAbbr, row.game.awayAbbr]))];
         const b2bTeams = await fetchB2BTeams(allAbbrs);
-
-        if (b2bTeams.size > 0) {
-          setLinesRows((prev) =>
-            prev.map((row) => ({
-              ...row,
-              homeB2B: b2bTeams.has(row.game.homeAbbr),
-              awayB2B: b2bTeams.has(row.game.awayAbbr),
-              simResult: null,
-            })),
-          );
-          setFetchStatus(`B2B updated: ${[...b2bTeams].join(", ")}`);
-        }
+        setLinesRows((prev) => {
+          const refreshedRows = prev.map((row) => ({
+            ...row,
+            homeB2B: b2bTeams.has(row.game.homeAbbr),
+            awayB2B: b2bTeams.has(row.game.awayAbbr),
+            simResult: null,
+          }));
+          return Object.keys(goalieRoster).length > 0 ? applyEstimatedGoalieOverrides(refreshedRows, goalieRoster, prev) : refreshedRows;
+        });
+        setFetchStatus(b2bTeams.size > 0 ? `B2B updated: ${[...b2bTeams].join(", ")}` : "B2B refreshed: no back-to-backs detected");
       }
     } catch (error) {
       setFetchError((error as Error).message);
@@ -588,7 +587,8 @@ export function useNhlPredictorController() {
       }
 
       setGoalieRoster(roster);
-      setScheduleStatus(`Goalie roster loaded for ${Object.keys(roster).length} teams`);
+      setLinesRows((prev) => applyEstimatedGoalieOverrides(prev, roster));
+      setScheduleStatus(`Goalie roster loaded for ${Object.keys(roster).length} teams · estimated starters applied`);
     } catch (error) {
       setScheduleStatus(`Goalie fetch failed: ${(error as Error).message}`);
     }
@@ -705,7 +705,7 @@ export function useNhlPredictorController() {
             }))
           : rows;
 
-      setLinesRows(rowsWithB2B);
+      setLinesRows(Object.keys(goalieRoster).length > 0 ? applyEstimatedGoalieOverrides(rowsWithB2B, goalieRoster) : rowsWithB2B);
       setShowLinesTable(true);
 
       const withOdds = rows.filter((row) => row.espnOdds).length;

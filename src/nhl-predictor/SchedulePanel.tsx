@@ -4,6 +4,7 @@ import { TEAMS } from "../nhl-core/data";
 import type { GoalieInfo, LinesRow, LiveTeamStats, OddsData } from "../nhl-core/types";
 import { isBulkPasteErrorStatus } from "./bulkPaste";
 import { analyzeBetting } from "./engine";
+import { formatGoalieOverrideTag, getEstimatedGoalieIndex, getEstimatedGoalieLabel, reconcileGoalieOverride } from "./goalieSelection";
 
 interface SchedulePanelProps {
   linesRows: LinesRow[];
@@ -185,6 +186,8 @@ export function SchedulePanel({
                 const puckLineDirection = odds?.puckLine ?? -1.5;
                 const homePuckLineLabel = puckLineDirection <= 0 ? "H -1.5 odds" : "H +1.5 odds";
                 const awayPuckLineLabel = puckLineDirection <= 0 ? "A +1.5 odds" : "A -1.5 odds";
+                const homeGoalieLabel = getEstimatedGoalieLabel(goalieRoster, row.game.homeAbbr, row.homeB2B, row.homeSVOverride);
+                const awayGoalieLabel = getEstimatedGoalieLabel(goalieRoster, row.game.awayAbbr, row.awayB2B, row.awaySVOverride);
                 const oddsFields: { field: keyof OddsData; label: string; placeholder: string }[] = [
                   { field: "homeMoneyline", label: "Home ML", placeholder: "-160" },
                   { field: "awayMoneyline", label: "Away ML", placeholder: "+140" },
@@ -254,7 +257,24 @@ export function SchedulePanel({
                                 onClick={() =>
                                   setLinesRows((prev) =>
                                     prev.map((entry, entryIndex) =>
-                                      entryIndex === idx ? { ...entry, [field]: !entry[field], simResult: null } : entry,
+                                      entryIndex === idx
+                                        ? (() => {
+                                            const nextB2B = !entry[field];
+                                            const isHomeField = field === "homeB2B";
+                                            return {
+                                              ...entry,
+                                              [field]: nextB2B,
+                                              [isHomeField ? "homeSVOverride" : "awaySVOverride"]: reconcileGoalieOverride(
+                                                isHomeField ? entry.homeSVOverride : entry.awaySVOverride,
+                                                entry[field],
+                                                nextB2B,
+                                                goalieRoster,
+                                                isHomeField ? entry.game.homeAbbr : entry.game.awayAbbr,
+                                              ),
+                                              simResult: null,
+                                            };
+                                          })()
+                                        : entry,
                                     ),
                                   )
                                 }
@@ -264,8 +284,16 @@ export function SchedulePanel({
                               </button>
                             );
                           })}
-                          {row.homeSVOverride != null && <span style={{ fontSize: 9, color: "#f59e0b", fontFamily: "monospace", background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.3)", borderRadius: 3, padding: "1px 5px", whiteSpace: "nowrap" }}>{row.game.homeAbbr} .{(row.homeSVOverride * 1000).toFixed(0)}</span>}
-                          {row.awaySVOverride != null && <span style={{ fontSize: 9, color: "#f59e0b", fontFamily: "monospace", background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.3)", borderRadius: 3, padding: "1px 5px", whiteSpace: "nowrap" }}>{row.game.awayAbbr} .{(row.awaySVOverride * 1000).toFixed(0)}</span>}
+                          {row.homeSVOverride != null && (
+                            <span style={{ fontSize: 9, color: "#fde68a", fontFamily: "monospace", background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.3)", borderRadius: 3, padding: "1px 5px", whiteSpace: "nowrap" }}>
+                              {formatGoalieOverrideTag(row.game.homeAbbr, row.homeSVOverride, homeGoalieLabel)}
+                            </span>
+                          )}
+                          {row.awaySVOverride != null && (
+                            <span style={{ fontSize: 9, color: "#fde68a", fontFamily: "monospace", background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.3)", borderRadius: 3, padding: "1px 5px", whiteSpace: "nowrap" }}>
+                              {formatGoalieOverrideTag(row.game.awayAbbr, row.awaySVOverride, awayGoalieLabel)}
+                            </span>
+                          )}
                         </div>
                       </td>
                       <td style={{ padding: "6px 7px", borderBottom: "1px solid #21262d" }}>
@@ -342,6 +370,9 @@ export function SchedulePanel({
                                 const currentValue = row[field];
                                 const defaultSV = liveStats[abbr]?.goalieSV ?? TEAMS[abbr]?.goalieSV;
                                 const goalies = goalieRoster[abbr] ?? [];
+                                const isB2B = field === "homeSVOverride" ? row.homeB2B : row.awayB2B;
+                                const estimatedLabel = getEstimatedGoalieLabel(goalieRoster, abbr, isB2B, currentValue);
+                                const estimatedIndex = getEstimatedGoalieIndex(goalieRoster, abbr, isB2B);
 
                                 return (
                                   <div key={field}>
@@ -349,6 +380,11 @@ export function SchedulePanel({
                                       {abbr} GOALIE
                                       {currentValue != null && <span style={{ marginLeft: 8, color: "#fde68a", fontWeight: 400 }}>ACTIVE .{(currentValue * 1000).toFixed(0)}</span>}
                                     </div>
+                                    {estimatedLabel && (
+                                      <div style={{ fontSize: 9, color: "#86efac", marginBottom: 6, fontFamily: "monospace" }}>
+                                        {estimatedLabel === "1st" ? "Estimated Regular Starting Goalie" : "Estimated Backup Goalie"}
+                                      </div>
+                                    )}
                                     <div style={{ fontSize: 9, color: "#6e7681", marginBottom: 6 }}>
                                       Team default SV%: .{defaultSV ? (defaultSV * 1000).toFixed(0) : "???"}
                                     </div>
@@ -356,7 +392,11 @@ export function SchedulePanel({
                                     {goalies.length > 0 && (
                                       <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginBottom: 8 }}>
                                         {goalies.slice(0, 4).map((goalie, goalieIndex) => {
-                                          const isActive = currentValue != null && Math.abs(currentValue - goalie.sv) < 0.0005;
+                                          const isEstimatedActive =
+                                            estimatedLabel != null &&
+                                            estimatedIndex != null &&
+                                            goalieIndex === estimatedIndex;
+                                          const isActive = isEstimatedActive || (estimatedLabel == null && currentValue != null && Math.abs(currentValue - goalie.sv) < 0.0005);
                                           const isStarter = goalieIndex === 0;
                                           return (
                                             <button
@@ -368,7 +408,7 @@ export function SchedulePanel({
                                                   ),
                                                 )
                                               }
-                                              style={{ background: isActive ? "rgba(245,158,11,0.2)" : isStarter ? "rgba(63,185,80,0.08)" : "rgba(100,180,255,0.06)", border: `1px solid ${isActive ? "#f59e0b" : isStarter ? "rgba(63,185,80,0.3)" : "rgba(100,180,255,0.2)"}`, borderRadius: 4, padding: "4px 8px", cursor: "pointer", fontFamily: "monospace", fontSize: 10, color: isActive ? "#fde68a" : isStarter ? "#86efac" : "#93c5fd", whiteSpace: "nowrap" }}
+                                              style={{ background: isActive ? "rgba(63,185,80,0.16)" : isStarter ? "rgba(63,185,80,0.08)" : "rgba(100,180,255,0.06)", border: `1px solid ${isActive ? "rgba(63,185,80,0.55)" : isStarter ? "rgba(63,185,80,0.3)" : "rgba(100,180,255,0.2)"}`, borderRadius: 4, padding: "4px 8px", cursor: "pointer", fontFamily: "monospace", fontSize: 10, color: isActive ? "#86efac" : "#93c5fd", whiteSpace: "nowrap" }}
                                             >
                                               {goalie.name.split(" ").pop()} .{(goalie.sv * 1000).toFixed(0)}
                                               <span style={{ fontSize: 9, marginLeft: 4, opacity: 0.7 }}>({goalie.gp}GS)</span>

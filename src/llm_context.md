@@ -26,11 +26,14 @@ Important files:
 - `src/nhl-predictor.tsx`
 - `src/nhl-predictor/useNhlPredictorController.ts`
 - `src/nhl-predictor/AnalysisPanel.tsx`
+- `src/nhl-predictor/SchedulePanel.tsx`
+- `src/nhl-predictor/goalieSelection.ts`
 - `src/nhl-predictor/EvaluationPanel.tsx`
 - `src/nhl-predictor/evaluation.ts`
 - `src/nhl-predictor/export.ts`
 - `src/nhl-core/data.ts`
 - `src/nhl-core/types.ts`
+- `src/nhl-core/engine.ts`
 - `.github/workflows/ci.yml`
 - `playwright.config.ts`
 - `RUNNING_THE_MODEL.md`
@@ -55,14 +58,11 @@ Major work completed:
 2. Testing
 - Added Vitest unit and component tests.
 - Added Playwright E2E tests.
-- Current passing local status at last handoff:
-  - `npm run lint`
-  - `npm test`
-  - `npm run build`
-  - `npm run test:e2e`
-- Most recent passing counts:
-  - Vitest: 27 tests
-  - Playwright: 2 E2E tests
+- Most recent focused passing status for the latest changes:
+  - `npm run test -- --run src\nhl-predictor\AnalysisPanel.test.tsx src\nhl-predictor\goalieSelection.test.ts src\nhl-core\engine.test.ts`
+- New focused tests added recently:
+  - `src/nhl-predictor/AnalysisPanel.test.tsx`
+  - `src/nhl-predictor/goalieSelection.test.ts`
 
 3. Model evaluation / backtesting first pass
 - Added in-app `MODEL EVALUATION` section via `EvaluationPanel.tsx`.
@@ -103,6 +103,43 @@ Major work completed:
   - `npm run test:e2e`
 - GitHub Actions has already run successfully after push.
 
+6. Goalie-selection workflow improvements
+- Added automatic goalie-selection helpers in `src/nhl-predictor/goalieSelection.ts`.
+- `LOAD GOALIES` now:
+  - loads goalie save percentage and games started by team
+  - auto-applies estimated goalie overrides to loaded schedule rows
+  - uses the top games-started goalie on normal rest
+  - uses the second-most-started goalie on B2B teams when available
+- Reapplied estimated goalie overrides when:
+  - the schedule is loaded after goalies are already loaded
+  - B2B status is refreshed later
+  - a B2B flag is toggled in the schedule table
+- Fixed a real active-goalie UI bug:
+  - if the top two goalies shared the same save percentage, both could appear active
+  - the open row editor now uses estimated slot/index logic so only the intended goalie is highlighted
+- Goalie UI now uses clearer labels:
+  - compact schedule tags show values like `BUF 9.10 - 2nd`
+  - editor labels say `Estimated Regular Starting Goalie` / `Estimated Backup Goalie`
+  - only the active goalie chip is highlighted green
+
+7. Best Bets / betting-threshold tuning
+- Fixed a real O/U display bug in `AnalysisPanel.tsx`:
+  - game cards showed O/U edge as percent correctly
+  - Best Bets was scaling O/U edge by `* 10` instead of `* 100`
+  - this caused examples like `8.0%` on the game card to appear as `0.8%` in Best Bets
+- Added a regression test in `src/nhl-predictor/AnalysisPanel.test.tsx`.
+- Tightened ML recommendation qualification in both engine copies:
+  - `src/nhl-predictor/engine.ts`
+  - `src/nhl-core/engine.ts`
+  - ML edge threshold is now `7%`
+  - ML quarter-Kelly threshold is now `4%`
+- Added an engine regression test showing a modest `6%` ML edge no longer qualifies as a play.
+- Best Bets strength grading is now market-specific in `AnalysisPanel.tsx`:
+  - ML: `MED` at `8.5%`, `STRONG` at `11%`
+  - PL: `MED` at `6%`, `STRONG` at `8%`
+  - O/U: `MED` at `4%`, `STRONG` at `8%`
+- This was tuned iteratively to reduce overclassification of ML bets as `STRONG` on large slates while keeping ML medium strength slightly looser than the first conservative pass.
+
 Important fixes made recently:
 - Playwright config was changed from `npm.cmd` to `npm run ...` for GitHub Linux runner compatibility.
 - Fixed a real UI bug in `ModelSetupPanel.tsx`:
@@ -125,10 +162,13 @@ Important fixes made recently:
   - improved schedule-table rendering so puck-line odds display more clearly and edit inputs refresh after bulk updates
 
 Docs updated:
+- `README.md`
+  - replaced the default Vite template with a project-specific overview and quick-start
 - `RUNNING_THE_MODEL.md`
-  - added testing section
-  - added model evaluation instructions
-  - updated workflow summary to include evaluation step
+  - documents the goalie auto-selection workflow
+  - documents current goalie UI labels
+  - notes B2B goalie troubleshooting
+  - mentions the new focused test areas
 - `NHL_MODEL_PREDICTION_ALGORITHMS.md`
   - definitions now include practical score bands like average / good / elite for major inputs
 
@@ -141,6 +181,9 @@ Current state:
 - Single-game tools now sit below the today's-lines/export workflow
 - Legacy CSV rows may have blank evaluation columns where the old export format lacked recoverable market odds
 - Bulk odds paste now supports single-digit and multi-digit rotation numbers and surfaces unmatched loaded games more clearly
+- Loaded goalie rosters now directly influence the daily slate workflow through estimated overrides
+- B2B teams can automatically switch to the second-most-started goalie
+- Best Bets strength labels are now less aggressive for ML than they were previously
 
 Known follow-up priorities discussed:
 1. Cleaner data boundary / typed adapters
@@ -158,13 +201,20 @@ Known follow-up priorities discussed:
 - clearer retry and timeout handling
 - clearer confidence/fallback states when APIs partially fail
 
-4. Accessibility / UX hardening
+4. Better starter-source integration
+- current goalie auto-selection is heuristic only
+- it is not a confirmed-starter feed
+- future improvement would be a real projected/confirmed starter source instead of:
+  - top games-started goalie on normal rest
+  - second games-started goalie on B2B
+
+5. Accessibility / UX hardening
 - better labels and semantics
 - keyboard friendliness
 - clearer loading/error states
 - improve giant lines table behavior on smaller screens
 
-5. Encoding cleanup
+6. Encoding cleanup
 - there are still some mojibake / text-encoding artifacts in UI strings and docs
 
 Recommended next step:
@@ -180,5 +230,9 @@ Notes for next session:
 - This is intentional and now reasonably clean:
   - `nhl-core` = shared domain code
   - `nhl-predictor` = app feature
+- There are still duplicate engine implementations in:
+  - `src/nhl-core/engine.ts`
+  - `src/nhl-predictor/engine.ts`
+  Threshold changes were intentionally mirrored in both.
 - Optional future naming cleanup:
   - rename `src/nhl-predictor.tsx` to something like `NHLPredictorApp.tsx` to reduce confusion with the folder name.

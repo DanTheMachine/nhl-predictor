@@ -221,6 +221,39 @@ describe('analyzeBetting', () => {
     expect(analysis.kellyAway).toBe(0)
   })
 
+  it('does not qualify a modest 6 percent moneyline edge as a play', () => {
+    const analysis = analyzeBetting(
+      {
+        hWinProb: 0.56,
+        aWinProb: 0.44,
+        hGoals: '2.90',
+        aGoals: '2.60',
+        total: '5.50',
+        otProb: 0.22,
+        goalieEdge: '+4.0 SV pts',
+        hPDOLuck: 'Running hot',
+        aPDOLuck: 'Running cold',
+        isPlayoff: false,
+        features: [],
+      },
+      {
+        source: 'manual',
+        homeMoneyline: -110,
+        awayMoneyline: -110,
+        puckLine: -1.5,
+        puckLineHomeOdds: 160,
+        puckLineAwayOdds: -180,
+        overUnder: 5.5,
+        overOdds: -110,
+        underOdds: -110,
+      },
+    )
+
+    expect(analysis.homeEdge).toBeCloseTo(0.06, 4)
+    expect(analysis.kellyHome).toBe(0)
+    expect(analysis.mlValueSide).toBe('none')
+  })
+
   it('can recommend the away side and the under', () => {
     const analysis = analyzeBetting(
       {

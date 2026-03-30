@@ -18,6 +18,18 @@ interface BetEntry {
   kelly: number;
 }
 
+function getStrengthThresholds(betType: string): { med: number; strong: number } {
+  if (betType === "ML") {
+    return { med: 8.5, strong: 11 };
+  }
+
+  if (betType === "PL") {
+    return { med: 6, strong: 8 };
+  }
+
+  return { med: 4, strong: 8 };
+}
+
 export function AnalysisPanel({ linesRows, resultsStatus, resultsRunning }: AnalysisPanelProps) {
   const simmedRows = linesRows.filter((row) => row.simResult && row.editedOdds);
   const hasSimResults = simmedRows.length > 0;
@@ -30,16 +42,18 @@ export function AnalysisPanel({ linesRows, resultsStatus, resultsRunning }: Anal
     if (edgePct < 8) return "#58a6ff";
     return "#3fb950";
   };
-  const betColor = (edgePct: number) => {
+  const betColor = (edgePct: number, betType: string) => {
+    const { med, strong } = getStrengthThresholds(betType);
     if (edgePct < 0) return "#f87171";
-    if (edgePct < 4) return "#d29922";
-    if (edgePct < 8) return "#58a6ff";
+    if (edgePct < med) return "#d29922";
+    if (edgePct < strong) return "#58a6ff";
     return "#3fb950";
   };
-  const betBorder = (edgePct: number) => {
+  const betBorder = (edgePct: number, betType: string) => {
+    const { med, strong } = getStrengthThresholds(betType);
     if (edgePct < 0) return "rgba(248,113,113,0.25)";
-    if (edgePct < 4) return "rgba(210,153,34,0.25)";
-    if (edgePct < 8) return "rgba(88,166,255,0.25)";
+    if (edgePct < med) return "rgba(210,153,34,0.25)";
+    if (edgePct < strong) return "rgba(88,166,255,0.25)";
     return "rgba(63,185,80,0.3)";
   };
 
@@ -96,7 +110,7 @@ export function AnalysisPanel({ linesRows, resultsStatus, resultsRunning }: Anal
         side: `${betting.ouRec.toUpperCase()} ${odds.overUnder.toFixed(1)}`,
         modelProb: `${sim.total} proj`,
         odds: betting.ouRec === "over" ? odds.overOdds : odds.underOdds,
-        edgePct: Math.abs(betting.ouEdge) * 10,
+        edgePct: Math.abs(betting.ouEdge) * 100,
         kelly: 0,
       });
     }
@@ -258,18 +272,18 @@ export function AnalysisPanel({ linesRows, resultsStatus, resultsRunning }: Anal
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
             {bets.map((bet, index) => (
-              <div key={index} style={{ display: "grid", gridTemplateColumns: "1fr 110px 52px 52px 52px 52px 70px", alignItems: "center", gap: 8, padding: "7px 10px", background: "#161b22", border: `1px solid ${betBorder(bet.edgePct)}`, borderRadius: 5, fontFamily: "monospace" }}>
+              <div key={index} style={{ display: "grid", gridTemplateColumns: "1fr 110px 52px 52px 52px 52px 70px", alignItems: "center", gap: 8, padding: "7px 10px", background: "#161b22", border: `1px solid ${betBorder(bet.edgePct, bet.betType)}`, borderRadius: 5, fontFamily: "monospace" }}>
                 <div style={{ minWidth: 0 }}>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: betColor(bet.edgePct) }}>{bet.betType} - {bet.side}</span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: betColor(bet.edgePct, bet.betType) }}>{bet.betType} - {bet.side}</span>
                   <span style={{ fontSize: 10, color: "#6e7681" }}> &nbsp;{bet.gameLabel} - {bet.gameTime}</span>
                 </div>
                 <div style={{ fontSize: 11, color: "#7dd3fc", textAlign: "right" }}>{bet.modelProb}</div>
                 <div style={{ fontSize: 11, fontWeight: 700, color: "#cae8ff", textAlign: "right" }}>{bet.odds > 0 ? "+" : ""}{bet.odds}</div>
-                <div style={{ fontSize: 11, fontWeight: 700, color: betColor(bet.edgePct), textAlign: "right" }}>+{bet.edgePct.toFixed(1)}%</div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: betColor(bet.edgePct, bet.betType), textAlign: "right" }}>+{bet.edgePct.toFixed(1)}%</div>
                 <div style={{ fontSize: 11, fontWeight: 700, color: bet.kelly > 0 ? "#f97316" : "#4b5563", textAlign: "right" }}>{bet.kelly > 0 ? `${(bet.kelly * 100).toFixed(1)}%` : "-"}</div>
                 <div />
-                <div style={{ fontSize: 9, fontWeight: 700, color: betColor(bet.edgePct), background: betBorder(bet.edgePct), borderRadius: 3, padding: "2px 5px", textAlign: "center", whiteSpace: "nowrap" }}>
-                  {bet.edgePct >= 8 ? "STRONG" : bet.edgePct >= 4 ? "MED" : "THIN"}
+                <div style={{ fontSize: 9, fontWeight: 700, color: betColor(bet.edgePct, bet.betType), background: betBorder(bet.edgePct, bet.betType), borderRadius: 3, padding: "2px 5px", textAlign: "center", whiteSpace: "nowrap" }}>
+                  {bet.edgePct >= getStrengthThresholds(bet.betType).strong ? "STRONG" : bet.edgePct >= getStrengthThresholds(bet.betType).med ? "MED" : "THIN"}
                 </div>
               </div>
             ))}

@@ -136,11 +136,14 @@ Click:
 What it does:
 
 - loads goalie save percentage and games played by team
+- auto-applies an estimated goalie override for loaded schedule rows
+- uses the top games-started goalie on normal rest
+- uses the second-most-started goalie on B2B teams when available
 - makes goalie override selection easier in the lines table
 
 Typical success message:
 
-- `✓ Goalie roster loaded for 32 teams`
+- `Goalie roster loaded for 32 teams · estimated starters applied`
 
 ### 7.4 If sportsbook lines need manual updates
 
@@ -169,6 +172,14 @@ If you know the confirmed goalie or want to model a backup:
 - choose or enter the away goalie override
 
 This changes the projected `goalieSV` used by the model for that row.
+
+Current UI notes:
+
+- compact schedule tags show goalie overrides like `BUF 9.10 - 2nd`
+- in the row editor, auto-applied estimates are labeled as:
+  - `Estimated Regular Starting Goalie`
+  - `Estimated Backup Goalie`
+- only the currently active goalie button is highlighted green
 
 ### 7.6 Run all simulations
 
@@ -199,7 +210,7 @@ What it does:
 
 Typical success message:
 
-- `✓ Exported nhl-predictions-MM-DD-YYYY.csv · X games`
+- `Exported nhl-predictions-MM-DD-YYYY.csv · X games`
 
 ### 7.8 Export next-day results
 
@@ -215,7 +226,7 @@ What it does:
 
 Typical success message:
 
-- `✓ Exported X results for YYYY-MM-DD · Paste into your Results tab in Google Sheets`
+- `Exported X results for YYYY-MM-DD · Paste into your Results tab in Google Sheets`
 
 ### 7.9 Evaluate model performance
 
@@ -341,7 +352,21 @@ Symptoms:
 
 Fix:
 
-- set a goalie override for the row if you want to force a specific goalie value
+- run `LOAD GOALIES` after loading the schedule so estimated overrides are applied automatically
+- or set / edit a goalie override manually for any row if you want to force a specific goalie value
+
+### B2B goalie switch looks wrong
+
+Symptoms:
+
+- a B2B team is loaded but the wrong goalie appears selected
+
+Fixes:
+
+- confirm the team is marked `B2B` in the schedule table
+- reload today's games to refresh B2B detection
+- load goalies again if you want estimated overrides reapplied from the latest roster
+- manually click a goalie chip if you want to override the heuristic
 
 ## 11. Running Tests
 
@@ -369,6 +394,8 @@ Current examples include:
 - `analyzeBetting(...)`
 - export helpers
 - reusable UI components like `TeamCard`, `StatBar`, and `IceRink`
+- Best Bets threshold grading in `AnalysisPanel`
+- goalie selection heuristics and B2B switching
 
 ### 11.2 E2E browser tests
 
