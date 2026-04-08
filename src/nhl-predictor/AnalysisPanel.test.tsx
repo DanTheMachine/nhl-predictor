@@ -100,4 +100,60 @@ describe("AnalysisPanel", () => {
     expect(screen.getAllByText("MED").length).toBeGreaterThan(0);
     expect(screen.queryByText("STRONG")).not.toBeInTheDocument();
   });
+
+  it("shows edited Vegas labels when odds were pasted or manually changed", () => {
+    const row: LinesRow = {
+      game: {
+        homeAbbr: "DAL",
+        awayAbbr: "COL",
+        gameTime: "8:00 PM ET",
+        tvInfo: "ESPN",
+      },
+      espnOdds: {
+        source: "espn",
+        homeMoneyline: -110,
+        awayMoneyline: -110,
+        puckLine: -1.5,
+        puckLineHomeOdds: 150,
+        puckLineAwayOdds: -170,
+        overUnder: 6.0,
+        overOdds: -110,
+        underOdds: -110,
+      },
+      editedOdds: {
+        source: "manual",
+        homeMoneyline: 100,
+        awayMoneyline: -120,
+        puckLine: -1.5,
+        puckLineHomeOdds: 160,
+        puckLineAwayOdds: -180,
+        overUnder: 6.5,
+        overOdds: -105,
+        underOdds: -115,
+      },
+      simResult: {
+        hWinProb: 0.272,
+        aWinProb: 0.728,
+        hGoals: "2.40",
+        aGoals: "3.60",
+        total: "6.00",
+        otProb: 0.17,
+        goalieEdge: "+1.5 SV pts",
+        hPDOLuck: "Running cold",
+        aPDOLuck: "Running hot",
+        isPlayoff: false,
+        features: [],
+      },
+      isEditing: false,
+      homeB2B: false,
+      awayB2B: false,
+      homeSVOverride: null,
+      awaySVOverride: null,
+    };
+
+    render(<AnalysisPanel linesRows={[row]} resultsStatus="" resultsRunning={false} />);
+
+    expect(screen.getAllByText("Vegas - Edited")).toHaveLength(3);
+    expect(screen.queryByText("Vegas line")).not.toBeInTheDocument();
+  });
 });

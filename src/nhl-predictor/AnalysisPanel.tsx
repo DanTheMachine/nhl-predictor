@@ -133,6 +133,7 @@ export function AnalysisPanel({ linesRows, resultsStatus, resultsRunning }: Anal
             {simmedRows.map((row, index) => {
               const sim = row.simResult!;
               const odds = row.editedOdds!;
+              const vegasLabel = odds.source === "manual" ? "Vegas - Edited" : "Vegas";
               const betting = analyzeBetting(sim, odds);
               const hProb = sim.hWinProb * 100;
               const aProb = sim.aWinProb * 100;
@@ -180,7 +181,7 @@ export function AnalysisPanel({ linesRows, resultsStatus, resultsRunning }: Anal
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 12 }}>
                     <div style={{ background: "#0d1117", borderRadius: 6, padding: "10px 8px", border: `1px solid ${betting.mlValueSide !== "none" ? "rgba(63,185,80,0.3)" : "#21262d"}` }}>
                       <div style={{ fontSize: 9, color: "#c3ced8", letterSpacing: 2, marginBottom: 6 }}>MONEYLINE</div>
-                      <div style={{ fontSize: 10, color: "#b3c0cc", marginBottom: 2 }}>Vegas</div>
+                      <div style={{ fontSize: 10, color: "#b3c0cc", marginBottom: 2 }}>{vegasLabel}</div>
                       <div style={{ fontSize: 11, color: "#cae8ff", marginBottom: 6 }}>
                         {row.game.homeAbbr} {odds.homeMoneyline > 0 ? "+" : ""}{odds.homeMoneyline} / {row.game.awayAbbr} {odds.awayMoneyline > 0 ? "+" : ""}{odds.awayMoneyline}
                       </div>
@@ -195,7 +196,7 @@ export function AnalysisPanel({ linesRows, resultsStatus, resultsRunning }: Anal
 
                     <div style={{ background: "#0d1117", borderRadius: 6, padding: "10px 8px", border: `1px solid ${betting.puckLineRec !== "pass" ? "rgba(63,185,80,0.3)" : "#21262d"}` }}>
                       <div style={{ fontSize: 9, color: "#c3ced8", letterSpacing: 2, marginBottom: 6 }}>PUCK LINE</div>
-                      <div style={{ fontSize: 10, color: "#b3c0cc", marginBottom: 2 }}>Vegas</div>
+                      <div style={{ fontSize: 10, color: "#b3c0cc", marginBottom: 2 }}>{vegasLabel}</div>
                       <div style={{ fontSize: 11, color: "#cae8ff", marginBottom: 6 }}>
                         {row.game.homeAbbr} {odds.puckLine <= 0 ? "-1.5" : "+1.5"} ({odds.puckLineHomeOdds > 0 ? "+" : ""}{odds.puckLineHomeOdds})
                       </div>
@@ -217,7 +218,7 @@ export function AnalysisPanel({ linesRows, resultsStatus, resultsRunning }: Anal
 
                     <div style={{ background: "#0d1117", borderRadius: 6, padding: "10px 8px", border: `1px solid ${betting.ouRec !== "pass" ? "rgba(63,185,80,0.3)" : "#21262d"}` }}>
                       <div style={{ fontSize: 9, color: "#c3ced8", letterSpacing: 2, marginBottom: 6 }}>OVER / UNDER</div>
-                      <div style={{ fontSize: 10, color: "#b3c0cc", marginBottom: 2 }}>Vegas line</div>
+                      <div style={{ fontSize: 10, color: "#b3c0cc", marginBottom: 2 }}>{vegasLabel}</div>
                       <div style={{ fontSize: 11, color: "#cae8ff", marginBottom: 6 }}>{odds.overUnder.toFixed(1)} ({odds.overOdds > 0 ? "+" : ""}{odds.overOdds} / {odds.underOdds > 0 ? "+" : ""}{odds.underOdds})</div>
                       <div style={{ fontSize: 10, color: "#b3c0cc", marginBottom: 2 }}>Model total</div>
                       <div style={{ fontSize: 11, color: "#7dd3fc", marginBottom: 6 }}>{sim.total} <span style={{ color: edgeColor(Math.abs(betting.ouEdge) * 100) }}>({(Math.abs(betting.ouEdge) * 100).toFixed(1)}% edge)</span></div>
