@@ -17,8 +17,8 @@ describe('IceRink', () => {
 
     expect(screen.getByText('62.5%')).toBeInTheDocument()
     expect(screen.getByText('37.5%')).toBeInTheDocument()
-    expect(screen.getByText('Bruins (HOME)')).toBeInTheDocument()
-    expect(screen.getByText('Canadiens (AWAY)')).toBeInTheDocument()
+    expect(screen.getByText('Bruins (Home)')).toBeInTheDocument()
+    expect(screen.getByText('Canadiens (Away)')).toBeInTheDocument()
   })
 })
 
@@ -105,8 +105,8 @@ describe('TeamCard', () => {
     )
 
     expect(screen.getByText(/HOME/)).toBeInTheDocument()
-    expect(screen.getByText('AVALANCHE')).toBeInTheDocument()
-    expect(screen.getByText('LIVE')).toBeInTheDocument()
+    expect(screen.getByText('Avalanche')).toBeInTheDocument()
+    expect(screen.getByText('Live')).toBeInTheDocument()
     expect(screen.getByText('Ball Arena')).toBeInTheDocument()
     expect(screen.getByText('High Altitude (DEN)')).toBeInTheDocument()
   })
@@ -115,7 +115,7 @@ describe('TeamCard', () => {
     render(<TeamCard abbr="BOS" side="AWAY" espnData={null} />)
 
     expect(screen.getByText(/AWAY/)).toBeInTheDocument()
-    expect(screen.getByText('BRUINS')).toBeInTheDocument()
+    expect(screen.getByText('Bruins')).toBeInTheDocument()
     expect(screen.queryByText('LIVE')).not.toBeInTheDocument()
     expect(screen.getByText('TD Garden')).toBeInTheDocument()
     expect(screen.queryByText('Standard NHL Ice')).not.toBeInTheDocument()

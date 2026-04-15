@@ -12,24 +12,82 @@ interface IceRinkProps {
 export function IceRink({ hProb, hColor, aColor, hName, aName }: IceRinkProps) {
   return (
     <div>
-      <div style={{ position: "relative", height: 60, borderRadius: 30, overflow: "hidden", border: "1px solid rgba(180,220,255,0.15)", boxShadow: "0 0 30px rgba(100,180,255,0.18) inset" }}>
-        <div style={{ position: "absolute", left: "50%", top: 0, bottom: 0, width: 1, background: "rgba(180,220,255,0.2)", zIndex: 3 }} />
-        <div style={{ position: "absolute", left: "50%", top: "50%", transform: "translate(-50%,-50%)", width: 32, height: 32, borderRadius: "50%", border: "1px solid rgba(180,220,255,0.2)", zIndex: 3 }} />
-        <div style={{ position: "absolute", inset: 0, backgroundImage: "repeating-linear-gradient(90deg,transparent,transparent 9.8%,rgba(180,220,255,0.04) 9.8%,rgba(180,220,255,0.04) 10%)", zIndex: 2, pointerEvents: "none" }} />
-        <div style={{ width: `${hProb * 100}%`, background: `linear-gradient(90deg,${hColor}dd,${hColor}99)`, height: "100%", transition: "width 1.4s cubic-bezier(.4,0,.2,1)", display: "flex", alignItems: "center", paddingLeft: 18, position: "relative", zIndex: 1 }}>
-          <span style={{ fontSize: 16, fontWeight: 900, color: "#fff", fontFamily: "'Barlow Condensed',Impact,sans-serif", letterSpacing: 2, textShadow: "0 2px 8px rgba(0,0,0,0.9)" }}>
+      <div style={{
+        position: "relative",
+        height: 64,
+        borderRadius: 32,
+        overflow: "hidden",
+        border: "1px solid var(--border-1)",
+        boxShadow: "0 0 24px rgba(59,130,246,0.08) inset",
+        background: "rgba(0,0,0,0.2)",
+      }}>
+        {/* Center line */}
+        <div style={{
+          position: "absolute", left: "50%", top: 0, bottom: 0,
+          width: 1, background: "rgba(255,255,255,0.12)", zIndex: 3,
+        }} />
+        {/* Center circle */}
+        <div style={{
+          position: "absolute", left: "50%", top: "50%",
+          transform: "translate(-50%,-50%)",
+          width: 28, height: 28, borderRadius: "50%",
+          border: "1px solid rgba(255,255,255,0.1)", zIndex: 3,
+        }} />
+        {/* Ice lines overlay */}
+        <div style={{
+          position: "absolute", inset: 0,
+          backgroundImage: "repeating-linear-gradient(90deg,transparent,transparent 9.8%,rgba(255,255,255,0.02) 9.8%,rgba(255,255,255,0.02) 10%)",
+          zIndex: 2, pointerEvents: "none",
+        }} />
+        {/* Home bar */}
+        <div style={{
+          width: `${hProb * 100}%`,
+          background: `linear-gradient(90deg, ${hColor}dd, ${hColor}88)`,
+          height: "100%",
+          transition: "width 1.5s cubic-bezier(.4,0,.2,1)",
+          display: "flex", alignItems: "center", paddingLeft: 20,
+          position: "relative", zIndex: 1,
+        }}>
+          <span style={{
+            fontSize: 15, fontWeight: 700,
+            color: "#fff",
+            fontFamily: "var(--font-display)",
+            textShadow: "0 1px 8px rgba(0,0,0,0.8)",
+            letterSpacing: "-0.02em",
+          }}>
             {(hProb * 100).toFixed(1)}%
           </span>
         </div>
-        <div style={{ position: "absolute", right: 0, top: 0, width: `${(1 - hProb) * 100}%`, background: `linear-gradient(90deg,${aColor}99,${aColor}dd)`, height: "100%", transition: "width 1.4s cubic-bezier(.4,0,.2,1)", display: "flex", alignItems: "center", justifyContent: "flex-end", paddingRight: 18, zIndex: 1 }}>
-          <span style={{ fontSize: 16, fontWeight: 900, color: "#fff", fontFamily: "'Barlow Condensed',Impact,sans-serif", letterSpacing: 2, textShadow: "0 2px 8px rgba(0,0,0,0.9)" }}>
+        {/* Away bar */}
+        <div style={{
+          position: "absolute", right: 0, top: 0,
+          width: `${(1 - hProb) * 100}%`,
+          background: `linear-gradient(90deg, ${aColor}88, ${aColor}dd)`,
+          height: "100%",
+          transition: "width 1.5s cubic-bezier(.4,0,.2,1)",
+          display: "flex", alignItems: "center", justifyContent: "flex-end", paddingRight: 20,
+          zIndex: 1,
+        }}>
+          <span style={{
+            fontSize: 15, fontWeight: 700,
+            color: "#fff",
+            fontFamily: "var(--font-display)",
+            textShadow: "0 1px 8px rgba(0,0,0,0.8)",
+            letterSpacing: "-0.02em",
+          }}>
             {((1 - hProb) * 100).toFixed(1)}%
           </span>
         </div>
       </div>
       <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8 }}>
-        <span style={{ fontSize: 11, color: hColor, fontFamily: "'Barlow Condensed',monospace", letterSpacing: 2 }}>{hName} (HOME)</span>
-        <span style={{ fontSize: 11, color: aColor, fontFamily: "'Barlow Condensed',monospace", letterSpacing: 2 }}>{aName} (AWAY)</span>
+        <span style={{
+          fontSize: 10, color: hColor,
+          fontFamily: "var(--font-mono)", letterSpacing: "0.1em", textTransform: "uppercase",
+        }}>{hName} (Home)</span>
+        <span style={{
+          fontSize: 10, color: aColor,
+          fontFamily: "var(--font-mono)", letterSpacing: "0.1em", textTransform: "uppercase",
+        }}>{aName} (Away)</span>
       </div>
     </div>
   );
@@ -61,17 +119,47 @@ export function StatBar({ label, hVal, aVal, hColor, aColor, lo, hi, invert = fa
   const aGood = invert ? aVal <= mid : aVal >= mid;
 
   return (
-    <div style={{ marginBottom: 11 }}>
-      <div style={{ fontSize: 11, color: "#94a8bf", letterSpacing: 2, marginBottom: 5, fontFamily: "monospace" }}>{label}</div>
+    <div style={{ marginBottom: 12 }}>
+      <div style={{
+        fontSize: 10, color: "var(--text-2)",
+        letterSpacing: "0.1em", textTransform: "uppercase",
+        marginBottom: 6, fontFamily: "var(--font-mono)",
+      }}>{label}</div>
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        <span style={{ fontSize: 12, fontWeight: 700, fontFamily: "monospace", color: hGood ? "#7dd3fc" : "#64748b", width: 54, textAlign: "right" }}>{fmt(hVal)}</span>
-        <div style={{ flex: 1, height: 5, background: "rgba(100,180,255,0.25)", borderRadius: 3, position: "relative" }}>
-          <div style={{ position: "absolute", left: 0, top: 0, height: "100%", width: `${norm(hVal)}%`, background: hColor, opacity: 0.85, borderRadius: 3, transition: "width 1s ease" }} />
+        <span style={{
+          fontSize: 11, fontWeight: 700, fontFamily: "var(--font-mono)",
+          color: hGood ? "var(--cyan)" : "var(--text-3)",
+          width: 54, textAlign: "right",
+        }}>{fmt(hVal)}</span>
+        <div style={{
+          flex: 1, height: 4,
+          background: "rgba(255,255,255,0.06)",
+          borderRadius: 2, position: "relative",
+        }}>
+          <div style={{
+            position: "absolute", left: 0, top: 0, height: "100%",
+            width: `${norm(hVal)}%`,
+            background: hColor, opacity: 0.9,
+            borderRadius: 2, transition: "width 1s ease",
+          }} />
         </div>
-        <div style={{ flex: 1, height: 5, background: "rgba(100,180,255,0.25)", borderRadius: 3, position: "relative" }}>
-          <div style={{ position: "absolute", left: 0, top: 0, height: "100%", width: `${norm(aVal)}%`, background: aColor, opacity: 0.85, borderRadius: 3, transition: "width 1s ease" }} />
+        <div style={{
+          flex: 1, height: 4,
+          background: "rgba(255,255,255,0.06)",
+          borderRadius: 2, position: "relative",
+        }}>
+          <div style={{
+            position: "absolute", left: 0, top: 0, height: "100%",
+            width: `${norm(aVal)}%`,
+            background: aColor, opacity: 0.9,
+            borderRadius: 2, transition: "width 1s ease",
+          }} />
         </div>
-        <span style={{ fontSize: 12, fontWeight: 700, fontFamily: "monospace", color: aGood ? "#7dd3fc" : "#64748b", width: 54 }}>{fmt(aVal)}</span>
+        <span style={{
+          fontSize: 11, fontWeight: 700, fontFamily: "var(--font-mono)",
+          color: aGood ? "var(--cyan)" : "var(--text-3)",
+          width: 54,
+        }}>{fmt(aVal)}</span>
       </div>
     </div>
   );
@@ -79,21 +167,21 @@ export function StatBar({ label, hVal, aVal, hColor, aColor, lo, hi, invert = fa
 
 export function FeatureRow({ label, detail, good }: Feature) {
   return (
-    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 0", borderBottom: "1px solid rgba(100,180,255,0.05)" }}>
-      <span style={{ fontSize: 11, color: "#94a8bf", fontFamily: "monospace" }}>{label}</span>
+    <div style={{
+      display: "flex", justifyContent: "space-between", alignItems: "center",
+      padding: "7px 0",
+      borderBottom: "1px solid var(--border-0)",
+    }}>
+      <span style={{ fontSize: 11, color: "var(--text-2)", fontFamily: "var(--font-mono)" }}>{label}</span>
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        <span style={{ fontSize: 11, color: "#c8e8ff", fontFamily: "monospace" }}>{detail}</span>
-        <span
-          style={{
-            fontSize: 11,
-            padding: "2px 6px",
-            borderRadius: 2,
-            fontFamily: "monospace",
-            background: good ? "rgba(125,211,252,0.1)" : "rgba(148,163,184,0.1)",
-            color: good ? "#7dd3fc" : "#64748b",
-            border: `1px solid ${good ? "rgba(125,211,252,0.2)" : "rgba(148,163,184,0.15)"}`,
-          }}
-        >
+        <span style={{ fontSize: 11, color: "var(--text)", fontFamily: "var(--font-mono)" }}>{detail}</span>
+        <span style={{
+          fontSize: 10, padding: "2px 6px", borderRadius: "var(--r-sm)",
+          fontFamily: "var(--font-mono)",
+          background: good ? "var(--cyan-lo)" : "rgba(255,255,255,0.04)",
+          color: good ? "var(--cyan)" : "var(--text-3)",
+          border: `1px solid ${good ? "var(--cyan-border)" : "var(--border-0)"}`,
+        }}>
           {good ? "▲" : "▼"}
         </span>
       </div>
@@ -115,36 +203,54 @@ export function TeamCard({ abbr, side, espnData, liveStats }: TeamCardProps) {
   const color = espnData?.[abbr]?.color ?? team.color;
 
   return (
-    <div style={{ background: `linear-gradient(135deg,${color}14,transparent)`, border: `1px solid ${color}30`, borderRadius: 6, padding: "12px 14px" }}>
-      <div style={{ fontSize: 11, color, letterSpacing: 3, fontFamily: "monospace", marginBottom: 3 }}>{side} · {team.div}</div>
-      <div style={{ fontFamily: "'Barlow Condensed',Impact,sans-serif", fontSize: 20, color: "#c8e8ff", letterSpacing: 2, marginBottom: 8, display: "flex", alignItems: "center", gap: 8 }}>
-        {team.name.toUpperCase()}
-        {live && <span style={{ fontSize: 9, fontWeight: 700, color: "#3fb950", background: "rgba(63,185,80,0.12)", border: "1px solid rgba(63,185,80,0.3)", borderRadius: 3, padding: "1px 5px", letterSpacing: 1, fontFamily: "monospace" }}>LIVE</span>}
+    <div style={{
+      background: `linear-gradient(135deg, ${color}12, transparent)`,
+      border: `1px solid ${color}28`,
+      borderRadius: "var(--r-lg)",
+      padding: "14px 16px",
+    }}>
+      <div style={{
+        fontSize: 10, color, letterSpacing: "0.15em", textTransform: "uppercase",
+        fontFamily: "var(--font-mono)", marginBottom: 4,
+      }}>{side} · {team.div}</div>
+      <div style={{
+        fontFamily: "var(--font-display)",
+        fontSize: 18, fontWeight: 700,
+        color: "var(--text)", marginBottom: 10,
+        display: "flex", alignItems: "center", gap: 8,
+        letterSpacing: "-0.01em",
+      }}>
+        {team.name}
+        {live && (
+          <span className="chip chip--green">Live</span>
+        )}
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 6 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 7 }}>
         {([
-          ["CF%", `${stats.cf.toFixed(1)}%`],
-          ["FF%", `${stats.ff.toFixed(1)}%`],
+          ["CF%",  `${stats.cf.toFixed(1)}%`],
+          ["FF%",  `${stats.ff.toFixed(1)}%`],
           ["xGF%", `${stats.xgf.toFixed(1)}%`],
-          ["SV%", `.${(stats.goalieSV * 1000).toFixed(0)}`],
-          ["SH%", `${stats.shootingPct.toFixed(1)}%`],
-          ["PP%", `${stats.ppPct.toFixed(1)}%`],
-          ["PK%", `${stats.pkPct.toFixed(1)}%`],
-          ["PDO", `${stats.pdo.toFixed(1)}`],
-          ["SRS", `${stats.srs >= 0 ? "+" : ""}${stats.srs.toFixed(2)}`],
+          ["SV%",  `.${(stats.goalieSV * 1000).toFixed(0)}`],
+          ["SH%",  `${stats.shootingPct.toFixed(1)}%`],
+          ["PP%",  `${stats.ppPct.toFixed(1)}%`],
+          ["PK%",  `${stats.pkPct.toFixed(1)}%`],
+          ["PDO",  `${stats.pdo.toFixed(1)}`],
+          ["SRS",  `${stats.srs >= 0 ? "+" : ""}${stats.srs.toFixed(2)}`],
         ] as [string, string][]).map(([label, value]) => (
           <div key={label}>
-            <div style={{ fontSize: 11, color: "#8fa8bf", letterSpacing: 1 }}>{label}</div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: "#c8e8ff", fontFamily: "monospace" }}>{value}</div>
+            <div style={{ fontSize: 9, color: "var(--text-3)", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 1 }}>{label}</div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text)", fontFamily: "var(--font-mono)" }}>{value}</div>
           </div>
         ))}
       </div>
-      <div style={{ marginTop: 8, display: "flex", gap: 8 }}>
-        <span style={{ fontSize: 11, padding: "2px 7px", borderRadius: 2, background: "rgba(100,180,255,0.07)", color: "#7ab8d8", fontFamily: "monospace" }}>{team.arena}</span>
+      <div style={{ marginTop: 10, display: "flex", gap: 6 }}>
+        <span style={{
+          fontSize: 10, padding: "2px 8px", borderRadius: "var(--r-sm)",
+          background: "rgba(255,255,255,0.04)", color: "var(--text-2)",
+          fontFamily: "var(--font-mono)", border: "1px solid var(--border-0)",
+        }}>{team.arena}</span>
         {team.ice !== "standard" && (
-          <span style={{ fontSize: 11, padding: "2px 7px", borderRadius: 2, background: "rgba(125,211,252,0.1)", color: "#7dd3fc", fontFamily: "monospace" }}>
-            {ICE_CONDITIONS[team.ice].label}
-          </span>
+          <span className="chip chip--cyan">{ICE_CONDITIONS[team.ice].label}</span>
         )}
       </div>
     </div>

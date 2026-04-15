@@ -183,26 +183,26 @@ describe("single game tools collapse", () => {
     const user = userEvent.setup();
     render(<NHLPredictor />);
 
-    expect(screen.getByRole("button", { name: "OPEN SINGLE GAME" })).toBeInTheDocument();
-    expect(screen.queryByText("RUN SIMULATION")).not.toBeInTheDocument();
-    expect(screen.queryByText("FILTER BY DIVISION")).not.toBeInTheDocument();
-    expect(screen.queryByText("ADVANCED STATS COMPARISON")).not.toBeInTheDocument();
-    expect(screen.queryByText("GAME TYPE")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Open Single Game" })).toBeInTheDocument();
+    expect(screen.queryByText("Run Simulation")).not.toBeInTheDocument();
+    expect(screen.queryByText("Filter by Division")).not.toBeInTheDocument();
+    expect(screen.queryByText("Advanced Stats Comparison")).not.toBeInTheDocument();
+    expect(screen.queryByText("Game Type")).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "OPEN SINGLE GAME" }));
+    await user.click(screen.getByRole("button", { name: "Open Single Game" }));
 
-    expect(screen.getByRole("button", { name: "HIDE SINGLE GAME" })).toBeInTheDocument();
-    expect(screen.getByText("RUN SIMULATION")).toBeInTheDocument();
-    expect(screen.getByText("FILTER BY DIVISION")).toBeInTheDocument();
-    expect(screen.getByText("ADVANCED STATS COMPARISON")).toBeInTheDocument();
-    expect(screen.getByText("GAME TYPE")).toBeInTheDocument();
-    expect(screen.getByText("LIVE ODDS / LINES")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Hide Single Game" })).toBeInTheDocument();
+    expect(screen.getByText("Run Simulation")).toBeInTheDocument();
+    expect(screen.getByText("Filter by Division")).toBeInTheDocument();
+    expect(screen.getByText("Advanced Stats Comparison")).toBeInTheDocument();
+    expect(screen.getByText("Game Type")).toBeInTheDocument();
+    expect(screen.getByText("Live Odds / Lines")).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "HIDE SINGLE GAME" }));
+    await user.click(screen.getByRole("button", { name: "Hide Single Game" }));
 
-    expect(screen.queryByText("RUN SIMULATION")).not.toBeInTheDocument();
-    expect(screen.queryByText("FILTER BY DIVISION")).not.toBeInTheDocument();
-    expect(screen.queryByText("ADVANCED STATS COMPARISON")).not.toBeInTheDocument();
-    expect(screen.queryByText("GAME TYPE")).not.toBeInTheDocument();
+    expect(screen.queryByText("Run Simulation")).not.toBeInTheDocument();
+    expect(screen.queryByText("Filter by Division")).not.toBeInTheDocument();
+    expect(screen.queryByText("Advanced Stats Comparison")).not.toBeInTheDocument();
+    expect(screen.queryByText("Game Type")).not.toBeInTheDocument();
   });
 });

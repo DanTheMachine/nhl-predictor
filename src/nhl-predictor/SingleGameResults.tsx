@@ -29,106 +29,186 @@ export function SingleGameResults({
 }: SingleGameResultsProps) {
   return (
     <div data-testid="simulation-results" style={{ animation: "fadeUp 0.5s ease" }}>
+      {/* Playoff notice */}
       {result.isPlayoff && (
-        <div style={{ background: "rgba(125,211,252,0.06)", border: "1px solid rgba(125,211,252,0.2)", borderRadius: 5, padding: "9px 16px", marginBottom: 14, display: "flex", alignItems: "center", gap: 10 }}>
-          <span style={{ fontSize: 11, color: "#7dd3fc", fontFamily: "monospace", letterSpacing: 2 }}>PLAYOFF MODE - Reduced scoring, goaltending amplified</span>
-        </div>
-      )}
-
-      {(Math.abs(hTeam.pdo - 100) > 2 || Math.abs(aTeam.pdo - 100) > 2) && (
-        <div style={{ background: "rgba(251,191,36,0.06)", border: "1px solid rgba(251,191,36,0.2)", borderRadius: 5, padding: "9px 16px", marginBottom: 14, display: "flex", alignItems: "center", gap: 10 }}>
-          <span style={{ fontSize: 11, color: "#fbbf24", fontFamily: "monospace", letterSpacing: 1 }}>
-            PDO REGRESSION WARNING - {hTeam.pdo > 102 ? `${hTeam.name} running hot` : aTeam.pdo > 102 ? `${aTeam.name} running hot` : `${hTeam.name} running cold`} · Expect mean reversion
+        <div style={{
+          background: "var(--cyan-lo)", border: "1px solid var(--cyan-border)",
+          borderRadius: "var(--r)", padding: "10px 16px", marginBottom: 12,
+          display: "flex", alignItems: "center", gap: 10,
+        }}>
+          <span style={{ fontSize: 11, color: "var(--cyan)", fontFamily: "var(--font-mono)", letterSpacing: "0.08em" }}>
+            Playoff Mode — Reduced scoring, goaltending amplified
           </span>
         </div>
       )}
 
+      {/* PDO regression warning */}
+      {(Math.abs(hTeam.pdo - 100) > 2 || Math.abs(aTeam.pdo - 100) > 2) && (
+        <div style={{
+          background: "var(--amber-lo)", border: "1px solid var(--amber-border)",
+          borderRadius: "var(--r)", padding: "10px 16px", marginBottom: 12,
+          display: "flex", alignItems: "center", gap: 10,
+        }}>
+          <span style={{ fontSize: 11, color: "var(--amber)", fontFamily: "var(--font-mono)", letterSpacing: "0.06em" }}>
+            PDO Regression Warning —{" "}
+            {hTeam.pdo > 102
+              ? `${hTeam.name} running hot`
+              : aTeam.pdo > 102
+                ? `${aTeam.name} running hot`
+                : `${hTeam.name} running cold`}
+            {" "}· Expect mean reversion
+          </span>
+        </div>
+      )}
+
+      {/* Win probability card */}
       <div className="nhl-card">
-        <div style={{ fontSize: 11, color: "#8faabf", letterSpacing: 3, marginBottom: 14 }}>WIN PROBABILITY (REGULATION)</div>
-        <IceRink hProb={result.hWinProb} hColor={hColor} aColor={aColor} hName={`${hTeam.name} ${(result.hWinProb * 100).toFixed(1)}%`} aName={`${aTeam.name} ${(result.aWinProb * 100).toFixed(1)}%`} />
-        <div style={{ marginTop: 12, fontSize: 10, color: "#8fa8bf", textAlign: "center", fontFamily: "monospace" }}>
+        <div className="label" style={{ marginBottom: 14 }}>Win Probability (Regulation)</div>
+        <IceRink
+          hProb={result.hWinProb}
+          hColor={hColor}
+          aColor={aColor}
+          hName={`${hTeam.name} ${(result.hWinProb * 100).toFixed(1)}%`}
+          aName={`${aTeam.name} ${(result.aWinProb * 100).toFixed(1)}%`}
+        />
+        <div style={{ marginTop: 10, fontSize: 10, color: "var(--text-3)", textAlign: "center", fontFamily: "var(--font-mono)" }}>
           Note: NHL games end in OT/SO ~24% of the time · regulation win prob shown above
         </div>
       </div>
 
+      {/* Projected Goals card */}
       <div className="nhl-card">
-        <div style={{ fontSize: 11, color: "#8faabf", letterSpacing: 3, marginBottom: 16 }}>PROJECTED GOALS</div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center", gap: 16, marginBottom: 16 }}>
+        <div className="label" style={{ marginBottom: 16 }}>Projected Goals</div>
+        <div style={{
+          display: "grid", gridTemplateColumns: "1fr auto 1fr",
+          alignItems: "center", gap: 20, marginBottom: 18,
+        }}>
+          {/* Home */}
           <div>
-            <div style={{ fontSize: 10, color: hColor, fontFamily: "monospace", letterSpacing: 2, marginBottom: 4 }}>{homeTeam}</div>
-            <div style={{ fontFamily: "'Barlow Condensed',Impact,sans-serif", fontSize: 62, lineHeight: 1, color: "#c8e8ff", fontWeight: 900 }}>{result.hGoals}</div>
+            <div style={{ fontSize: 10, color: hColor, fontFamily: "var(--font-mono)", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 4 }}>
+              {homeTeam}
+            </div>
+            <div style={{
+              fontFamily: "'Big Shoulders Display', var(--font-display)",
+              fontSize: 80, lineHeight: 0.92, fontWeight: 900,
+              color: "var(--text)", letterSpacing: "0.01em",
+            }}>{result.hGoals}</div>
           </div>
+
+          {/* Center / O/U */}
           <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: 11, color: "#8faabf", letterSpacing: 2, marginBottom: 4 }}>MODEL O/U</div>
-            <div style={{ fontFamily: "'Barlow Condensed',Impact,sans-serif", fontSize: 34, color: "#38bdf8", fontWeight: 900 }}>{result.total}</div>
+            <div className="label" style={{ marginBottom: 6 }}>Model O/U</div>
+            <div style={{
+              fontFamily: "'Big Shoulders Display', var(--font-display)",
+              fontSize: 42, fontWeight: 900,
+              color: "var(--cyan)", letterSpacing: "0.01em",
+            }}>{result.total}</div>
             {odds ? (
               (() => {
                 const betting = analyzeBetting(result, odds);
-                const ouRec = betting.ouRec === "pass" ? "PASS" : betting.ouRec.toUpperCase();
-                const recCol = ouRec === "OVER" ? "#38bdf8" : ouRec === "UNDER" ? "#f87171" : "#6e7681";
+                const ouRec = betting.ouRec === "pass" ? "Pass" : betting.ouRec.toUpperCase();
+                const recCol = ouRec === "OVER" ? "var(--blue)" : ouRec === "UNDER" ? "var(--red)" : "var(--text-3)";
                 return (
                   <>
-                    <div style={{ fontSize: 10, color: "#6e7681", letterSpacing: 1, marginTop: 8, marginBottom: 2, fontFamily: "monospace" }}>VEGAS LINE</div>
-                    <div style={{ fontFamily: "'Barlow Condensed',Impact,sans-serif", fontSize: 22, color: "#cae8ff", fontWeight: 900 }}>{odds.overUnder.toFixed(1)}</div>
+                    <div style={{ fontSize: 10, color: "var(--text-3)", letterSpacing: "0.06em", marginTop: 10, marginBottom: 3, fontFamily: "var(--font-mono)", textTransform: "uppercase" }}>Vegas Line</div>
+                    <div style={{
+                      fontFamily: "'Big Shoulders Display', var(--font-display)",
+                      fontSize: 24, fontWeight: 700, color: "var(--text)", letterSpacing: "-0.01em",
+                    }}>{odds.overUnder.toFixed(1)}</div>
                     <div style={{ display: "flex", gap: 6, justifyContent: "center", marginTop: 4 }}>
-                      <span style={{ fontSize: 10, color: "#6e7681", fontFamily: "monospace" }}>o{odds.overUnder.toFixed(1)} {odds.overOdds > 0 ? "+" : ""}{odds.overOdds}</span>
-                      <span style={{ color: "#30363d" }}>|</span>
-                      <span style={{ fontSize: 10, color: "#6e7681", fontFamily: "monospace" }}>u{odds.overUnder.toFixed(1)} {odds.underOdds > 0 ? "+" : ""}{odds.underOdds}</span>
+                      <span style={{ fontSize: 9, color: "var(--text-3)", fontFamily: "var(--font-mono)" }}>
+                        o{odds.overUnder.toFixed(1)} {odds.overOdds > 0 ? "+" : ""}{odds.overOdds}
+                      </span>
+                      <span style={{ color: "var(--border-1)" }}>|</span>
+                      <span style={{ fontSize: 9, color: "var(--text-3)", fontFamily: "var(--font-mono)" }}>
+                        u{odds.overUnder.toFixed(1)} {odds.underOdds > 0 ? "+" : ""}{odds.underOdds}
+                      </span>
                     </div>
-                    <div style={{ marginTop: 6, fontSize: 11, fontWeight: 700, color: recCol, fontFamily: "monospace", letterSpacing: 1 }}>
-                      {ouRec}{ouRec !== "PASS" ? ` (+${(Math.abs(betting.ouEdge) * 100).toFixed(1)}%)` : ""}
+                    <div style={{
+                      marginTop: 8, fontSize: 11, fontWeight: 700,
+                      color: recCol, fontFamily: "var(--font-mono)", letterSpacing: "0.06em",
+                    }}>
+                      {ouRec}{ouRec !== "Pass" ? ` (+${(Math.abs(betting.ouEdge) * 100).toFixed(1)}%)` : ""}
                     </div>
                   </>
                 );
               })()
             ) : (
               <>
-                <div style={{ fontSize: 11, color: "#8faabf", marginTop: 6, letterSpacing: 1 }}>GOALIE EDGE</div>
-                <div style={{ fontSize: 12, color: "#c8e8ff", fontFamily: "monospace" }}>
+                <div style={{ fontSize: 11, color: "var(--text-2)", marginTop: 8, letterSpacing: "0.06em", fontFamily: "var(--font-mono)" }}>Goalie Edge</div>
+                <div style={{ fontSize: 12, color: "var(--text)", fontFamily: "var(--font-mono)" }}>
                   {parseFloat(result.goalieEdge) > 0 ? homeTeam : awayTeam} +{Math.abs(parseFloat(result.goalieEdge)).toFixed(3)}
                 </div>
               </>
             )}
           </div>
+
+          {/* Away */}
           <div style={{ textAlign: "right" }}>
-            <div style={{ fontSize: 10, color: aColor, fontFamily: "monospace", letterSpacing: 2, marginBottom: 4 }}>{awayTeam}</div>
-            <div style={{ fontFamily: "'Barlow Condensed',Impact,sans-serif", fontSize: 62, lineHeight: 1, color: "#c8e8ff", fontWeight: 900 }}>{result.aGoals}</div>
+            <div style={{ fontSize: 10, color: aColor, fontFamily: "var(--font-mono)", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 4 }}>
+              {awayTeam}
+            </div>
+            <div style={{
+              fontFamily: "'Big Shoulders Display', var(--font-display)",
+              fontSize: 80, lineHeight: 0.92, fontWeight: 900,
+              color: "var(--text)", letterSpacing: "0.01em",
+            }}>{result.aGoals}</div>
           </div>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 8, marginBottom: 0 }}>
+        {/* Moneyline comparison */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 8, marginBottom: 8 }}>
           {([
             { label: homeTeam, modelProb: result.hWinProb, color: hColor, vegaML: odds?.homeMoneyline },
             { label: awayTeam, modelProb: result.aWinProb, color: aColor, vegaML: odds?.awayMoneyline },
           ] as { label: string; modelProb: number; color: string; vegaML?: number }[]).map(({ label, modelProb, color, vegaML }) => {
-            const modelML = modelProb >= 0.5 ? `-${Math.round((modelProb / (1 - modelProb)) * 100)}` : `+${Math.round(((1 - modelProb) / modelProb) * 100)}`;
+            const modelML = modelProb >= 0.5
+              ? `-${Math.round((modelProb / (1 - modelProb)) * 100)}`
+              : `+${Math.round(((1 - modelProb) / modelProb) * 100)}`;
             const vegaStr = vegaML ? (vegaML > 0 ? `+${vegaML}` : `${vegaML}`) : null;
             const vegaImplied = vegaML ? (vegaML < 0 ? (-vegaML) / (-vegaML + 100) : 100 / (vegaML + 100)) : null;
             const edge = vegaImplied ? (modelProb - vegaImplied) * 100 : null;
             return (
-              <div key={label} style={{ background: "rgba(100,180,255,0.07)", border: "1px solid rgba(100,180,255,0.15)", borderRadius: 6, padding: "12px 10px" }}>
-                <div style={{ fontSize: 10, fontWeight: 700, color: "#8faabf", letterSpacing: 2, marginBottom: 8, fontFamily: "monospace" }}>{label} MONEYLINE</div>
-                <div style={{ display: "flex", gap: 10, alignItems: "flex-end", flexWrap: "wrap" }}>
+              <div key={label} style={{
+                background: "rgba(0,0,0,0.2)",
+                border: `1px solid ${color}22`,
+                borderRadius: "var(--r)",
+                padding: "12px 12px",
+              }}>
+                <div className="label" style={{ marginBottom: 10 }}>{label} Moneyline</div>
+                <div style={{ display: "flex", gap: 12, alignItems: "flex-end", flexWrap: "wrap" }}>
                   <div>
-                    <div style={{ fontSize: 9, color: "#6e7681", letterSpacing: 1, marginBottom: 2, fontFamily: "monospace" }}>MODEL</div>
-                    <div style={{ fontSize: 22, fontWeight: 900, color, fontFamily: "'Barlow Condensed',Impact,monospace" }}>{modelML}</div>
-                    <div style={{ fontSize: 10, color: "#6e7681", fontFamily: "monospace" }}>{(modelProb * 100).toFixed(1)}% win</div>
+                    <div style={{ fontSize: 9, color: "var(--text-3)", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 2, fontFamily: "var(--font-mono)" }}>Model</div>
+                    <div style={{
+                      fontFamily: "'Big Shoulders Display', var(--font-display)",
+                      fontSize: 24, fontWeight: 800, color, letterSpacing: "-0.02em",
+                    }}>{modelML}</div>
+                    <div style={{ fontSize: 10, color: "var(--text-2)", fontFamily: "var(--font-mono)" }}>
+                      {(modelProb * 100).toFixed(1)}% win
+                    </div>
                   </div>
                   {vegaStr ? (
                     <>
-                      <div style={{ color: "#30363d", fontSize: 18, fontWeight: 300, alignSelf: "center" }}>|</div>
+                      <div style={{ color: "var(--border-1)", fontSize: 20, alignSelf: "center" }}>|</div>
                       <div>
-                        <div style={{ fontSize: 9, color: "#6e7681", letterSpacing: 1, marginBottom: 2, fontFamily: "monospace" }}>VEGAS</div>
-                        <div style={{ fontSize: 22, fontWeight: 900, color: "#cae8ff", fontFamily: "'Barlow Condensed',Impact,monospace" }}>{vegaStr}</div>
+                        <div style={{ fontSize: 9, color: "var(--text-3)", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 2, fontFamily: "var(--font-mono)" }}>Vegas</div>
+                        <div style={{
+                          fontFamily: "'Big Shoulders Display', var(--font-display)",
+                          fontSize: 24, fontWeight: 800, color: "var(--text)", letterSpacing: "-0.02em",
+                        }}>{vegaStr}</div>
                         {edge !== null && (
-                          <div style={{ fontSize: 10, fontWeight: 700, color: edge > 2 ? "#3fb950" : edge < -2 ? "#f85149" : "#8faabf", fontFamily: "monospace" }}>
+                          <div style={{
+                            fontSize: 10, fontWeight: 700,
+                            color: edge > 2 ? "var(--green)" : edge < -2 ? "var(--red)" : "var(--text-2)",
+                            fontFamily: "var(--font-mono)",
+                          }}>
                             {edge > 0 ? "+" : ""}{edge.toFixed(1)}% edge
                           </div>
                         )}
                       </div>
                     </>
                   ) : (
-                    <div style={{ fontSize: 10, color: "#3d444d", fontFamily: "monospace", alignSelf: "center" }}>
+                    <div style={{ fontSize: 10, color: "var(--text-3)", fontFamily: "var(--font-mono)", alignSelf: "center" }}>
                       fetch lines<br />for Vegas
                     </div>
                   )}
@@ -138,163 +218,299 @@ export function SingleGameResults({
           })}
         </div>
 
-        {odds && (
-          (() => {
-            const ba2 = analyzeBetting(result, odds);
-            return (
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 8 }}>
-                {[
-                  { abbr: homeTeam, plLine: odds.puckLine <= 0 ? "-1.5" : "+1.5", plOdds: odds.puckLineHomeOdds, color: hColor },
-                  { abbr: awayTeam, plLine: odds.puckLine <= 0 ? "+1.5" : "-1.5", plOdds: odds.puckLineAwayOdds, color: aColor },
-                ].map(({ abbr, plLine, plOdds, color }) => {
-                  const isRec = ba2.puckLineRec.startsWith(abbr === homeTeam ? "home" : "away") && ba2.puckLineRec !== "pass";
-                  return (
-                    <div key={abbr} style={{ background: isRec ? "rgba(63,185,80,0.08)" : "rgba(100,180,255,0.07)", border: `1px solid ${isRec ? "rgba(63,185,80,0.3)" : "rgba(100,180,255,0.15)"}`, borderRadius: 6, padding: "10px" }}>
-                      <div style={{ fontSize: 10, fontWeight: 700, color: "#8faabf", letterSpacing: 2, marginBottom: 6, fontFamily: "monospace" }}>{abbr} PUCK LINE</div>
-                      <div style={{ display: "flex", alignItems: "flex-end", gap: 8 }}>
-                        <div>
-                          <div style={{ fontSize: 9, color: "#6e7681", letterSpacing: 1, marginBottom: 2, fontFamily: "monospace" }}>LINE</div>
-                          <div style={{ fontSize: 20, fontWeight: 900, color, fontFamily: "'Barlow Condensed',Impact,monospace" }}>{plLine}</div>
-                        </div>
-                        <div style={{ color: "#30363d", fontSize: 16, alignSelf: "center" }}>|</div>
-                        <div>
-                          <div style={{ fontSize: 9, color: "#6e7681", letterSpacing: 1, marginBottom: 2, fontFamily: "monospace" }}>ODDS</div>
-                          <div style={{ fontSize: 20, fontWeight: 900, color: "#cae8ff", fontFamily: "'Barlow Condensed',Impact,monospace" }}>{plOdds > 0 ? "+" : ""}{plOdds}</div>
-                        </div>
-                        {isRec && (
-                          <div style={{ marginLeft: "auto" }}>
-                            <div style={{ fontSize: 9, color: "#3fb950", letterSpacing: 1, fontFamily: "monospace", marginBottom: 2 }}>EDGE</div>
-                            <div style={{ fontSize: 13, fontWeight: 700, color: "#3fb950", fontFamily: "monospace" }}>+{ba2.puckLineEdge.toFixed(1)}%</div>
-                          </div>
-                        )}
+        {/* Puck line comparison */}
+        {odds && (() => {
+          const ba2 = analyzeBetting(result, odds);
+          return (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 8, marginBottom: 8 }}>
+              {[
+                { abbr: homeTeam, plLine: odds.puckLine <= 0 ? "-1.5" : "+1.5", plOdds: odds.puckLineHomeOdds, color: hColor },
+                { abbr: awayTeam, plLine: odds.puckLine <= 0 ? "+1.5" : "-1.5", plOdds: odds.puckLineAwayOdds, color: aColor },
+              ].map(({ abbr, plLine, plOdds, color }) => {
+                const isRec = ba2.puckLineRec.startsWith(abbr === homeTeam ? "home" : "away") && ba2.puckLineRec !== "pass";
+                return (
+                  <div key={abbr} style={{
+                    background: isRec ? "var(--green-lo)" : "rgba(0,0,0,0.2)",
+                    border: `1px solid ${isRec ? "var(--green-border)" : "var(--border-1)"}`,
+                    borderRadius: "var(--r)", padding: "10px 12px",
+                  }}>
+                    <div className="label" style={{ marginBottom: 8 }}>{abbr} Puck Line</div>
+                    <div style={{ display: "flex", alignItems: "flex-end", gap: 10 }}>
+                      <div>
+                        <div style={{ fontSize: 9, color: "var(--text-3)", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 2, fontFamily: "var(--font-mono)" }}>Line</div>
+                        <div style={{
+                          fontFamily: "'Big Shoulders Display', var(--font-display)",
+                          fontSize: 22, fontWeight: 700, color, letterSpacing: "-0.02em",
+                        }}>{plLine}</div>
                       </div>
+                      <div style={{ color: "var(--border-1)", fontSize: 16, alignSelf: "center" }}>|</div>
+                      <div>
+                        <div style={{ fontSize: 9, color: "var(--text-3)", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 2, fontFamily: "var(--font-mono)" }}>Odds</div>
+                        <div style={{
+                          fontFamily: "'Big Shoulders Display', var(--font-display)",
+                          fontSize: 22, fontWeight: 700, color: "var(--text)", letterSpacing: "-0.02em",
+                        }}>{plOdds > 0 ? "+" : ""}{plOdds}</div>
+                      </div>
+                      {isRec && (
+                        <div style={{ marginLeft: "auto" }}>
+                          <div style={{ fontSize: 9, color: "var(--green)", letterSpacing: "0.06em", textTransform: "uppercase", fontFamily: "var(--font-mono)", marginBottom: 2 }}>Edge</div>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: "var(--green)", fontFamily: "var(--font-mono)" }}>
+                            +{ba2.puckLineEdge.toFixed(1)}%
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  );
-                })}
-              </div>
-            );
-          })()
-        )}
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })()}
 
+        {/* PDO indicators */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 8 }}>
           {([
-            ["H PDO", hTeam.pdo.toFixed(1), Math.abs(hTeam.pdo - 100) > 2 ? "#fbbf24" : "#7dd3fc"],
-            ["A PDO", aTeam.pdo.toFixed(1), Math.abs(aTeam.pdo - 100) > 2 ? "#fbbf24" : "#7dd3fc"],
+            ["H PDO", hTeam.pdo.toFixed(1), Math.abs(hTeam.pdo - 100) > 2 ? "var(--amber)" : "var(--cyan)"],
+            ["A PDO", aTeam.pdo.toFixed(1), Math.abs(aTeam.pdo - 100) > 2 ? "var(--amber)" : "var(--cyan)"],
           ] as [string, string, string][]).map(([label, value, color]) => (
-            <div key={label} style={{ background: "rgba(100,180,255,0.07)", border: "1px solid rgba(100,180,255,0.08)", borderRadius: 4, padding: "8px", textAlign: "center" }}>
-              <div style={{ fontSize: 10, color: "#8faabf", letterSpacing: 2, marginBottom: 3, fontFamily: "monospace" }}>{label}</div>
-              <div style={{ fontSize: 16, fontWeight: 900, color, fontFamily: "'Barlow Condensed',Impact,monospace" }}>{value}</div>
+            <div key={label} style={{
+              background: "rgba(0,0,0,0.2)", border: "1px solid var(--border-0)",
+              borderRadius: "var(--r-sm)", padding: "8px", textAlign: "center",
+            }}>
+              <div className="label" style={{ marginBottom: 4 }}>{label}</div>
+              <div style={{
+                fontFamily: "'Big Shoulders Display', var(--font-display)",
+                fontSize: 18, fontWeight: 700, color, letterSpacing: "-0.01em",
+              }}>{value}</div>
             </div>
           ))}
         </div>
       </div>
 
+      {/* Model Inputs */}
       <div className="nhl-card">
-        <div style={{ fontSize: 11, color: "#8faabf", letterSpacing: 3, marginBottom: 12 }}>MODEL INPUTS</div>
+        <div className="label" style={{ marginBottom: 14 }}>Model Inputs</div>
         {result.features.map((feature) => <FeatureRow key={feature.label} {...feature} />)}
       </div>
 
-      {odds && (
-        (() => {
-          const ba = analyzeBetting(result, odds);
-          const edgeColor = (edge: number) => edge > 3 ? "#4ade80" : edge > 1 ? "#fbbf24" : "#64748b";
-          const recColor = (rec: string) => (rec === "pass" ? "#64748b" : "#4ade80");
-          return (
-            <div data-testid="betting-analysis" className="nhl-card" style={{ border: "1px solid rgba(74,222,128,0.2)", background: "rgba(74,222,128,0.03)" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-                <div style={{ fontSize: 11, color: "#7aaa5a", letterSpacing: 3 }}>BETTING ANALYSIS</div>
-                <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 2, fontFamily: "monospace", background: odds.source === "espn" ? "rgba(74,222,128,0.12)" : "rgba(251,191,36,0.1)", color: odds.source === "espn" ? "#4ade80" : "#fbbf24", border: `1px solid ${odds.source === "espn" ? "rgba(74,222,128,0.25)" : "rgba(251,191,36,0.2)"}` }}>
-                  {odds.source === "espn" ? "LIVE ESPN LINES" : "MANUAL LINES"}
-                </span>
+      {/* Betting Analysis */}
+      {odds && (() => {
+        const ba = analyzeBetting(result, odds);
+        const edgeColor = (edge: number) => edge > 3 ? "var(--green)" : edge > 1 ? "var(--amber)" : "var(--text-3)";
+        const recColor = (rec: string) => rec === "pass" ? "var(--text-3)" : "var(--green)";
+        return (
+          <div
+            data-testid="betting-analysis"
+            className="nhl-card"
+            style={{ border: "1px solid var(--green-border)", background: "rgba(74,222,128,0.018)" }}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
+              <div className="label" style={{ color: "var(--green)" }}>Betting Analysis</div>
+              <span
+                className={`chip ${odds.source === "espn" ? "chip--green" : "chip--amber"}`}
+              >
+                {odds.source === "espn" ? "Live ESPN Lines" : "Manual Lines"}
+              </span>
+            </div>
+
+            {/* Implied vs model */}
+            <div style={{ marginBottom: 16 }}>
+              <div className="label" style={{ marginBottom: 10 }}>Implied Probability vs Model</div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                {([
+                  [homeTeam, odds.homeMoneyline, ba.homeImpliedProb, result.hWinProb, ba.homeEdge, hColor],
+                  [awayTeam, odds.awayMoneyline, ba.awayImpliedProb, result.aWinProb, ba.awayEdge, aColor],
+                ] as [string, number, number, number, number, string][]).map(([abbr, ml, implied, model, edge, color]) => (
+                  <div key={abbr} style={{
+                    background: "rgba(0,0,0,0.2)",
+                    border: `1px solid ${color}22`,
+                    borderRadius: "var(--r)", padding: "14px 14px",
+                  }}>
+                    <div style={{
+                      fontFamily: "var(--font-mono)",
+                      fontSize: 11, fontWeight: 700, color,
+                      letterSpacing: "0.1em", textTransform: "uppercase",
+                      marginBottom: 12,
+                    }}>{abbr}</div>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 10 }}>
+                      <div style={{ background: "rgba(255,255,255,0.04)", borderRadius: "var(--r-sm)", padding: "8px 10px" }}>
+                        <div style={{ fontSize: 9, color: "var(--text-3)", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 4, fontFamily: "var(--font-mono)" }}>Vegas ML</div>
+                        <div style={{
+                          fontFamily: "'Big Shoulders Display', var(--font-display)",
+                          fontSize: 22, fontWeight: 800, color: "var(--text)", letterSpacing: "-0.02em",
+                        }}>{ml > 0 ? "+" : ""}{ml}</div>
+                        <div style={{ fontSize: 10, color: "var(--text-3)", fontFamily: "var(--font-mono)" }}>
+                          {(implied * 100).toFixed(1)}% impl.
+                        </div>
+                      </div>
+                      <div style={{ background: `${color}14`, borderRadius: "var(--r-sm)", padding: "8px 10px" }}>
+                        <div style={{ fontSize: 9, color: "var(--text-3)", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 4, fontFamily: "var(--font-mono)" }}>Model ML</div>
+                        <div style={{
+                          fontFamily: "'Big Shoulders Display', var(--font-display)",
+                          fontSize: 22, fontWeight: 800, color, letterSpacing: "-0.02em",
+                        }}>
+                          {model >= 0.5 ? `-${Math.round((model / (1 - model)) * 100)}` : `+${Math.round(((1 - model) / model) * 100)}`}
+                        </div>
+                        <div style={{ fontSize: 10, color: "var(--text-3)", fontFamily: "var(--font-mono)" }}>
+                          {(model * 100).toFixed(1)}% prob.
+                        </div>
+                      </div>
+                    </div>
+                    {/* Progress bar comparison */}
+                    <div style={{ height: 3, background: "var(--border-0)", borderRadius: 2, marginBottom: 8, position: "relative" }}>
+                      <div style={{ position: "absolute", left: 0, top: 0, height: "100%", width: `${implied * 100}%`, background: "var(--text-3)", borderRadius: 2 }} />
+                      <div style={{ position: "absolute", left: 0, top: 0, height: "100%", width: `${model * 100}%`, background: color, borderRadius: 2, opacity: 0.8 }} />
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span style={{ fontSize: 10, color: "var(--text-3)", fontFamily: "var(--font-mono)", letterSpacing: "0.06em", textTransform: "uppercase" }}>Edge</span>
+                      <span style={{
+                        fontFamily: "'Big Shoulders Display', var(--font-display)",
+                        fontSize: 16, fontWeight: 700, color: edgeColor(edge * 100),
+                      }}>
+                        {edge > 0 ? "+" : ""}{(edge * 100).toFixed(1)}%
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Bet rec cards */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+              <div style={{
+                background: "rgba(0,0,0,0.2)",
+                border: `1px solid ${ba.mlValueSide !== "none" ? "var(--green-border)" : "var(--border-1)"}`,
+                borderRadius: "var(--r)", padding: "12px 10px",
+              }}>
+                <div className="label" style={{ color: "var(--green)", marginBottom: 8 }}>Moneyline Value</div>
+                <div style={{
+                  fontFamily: "'Big Shoulders Display', var(--font-display)",
+                  fontSize: 16, fontWeight: 700,
+                  color: recColor(ba.mlValueSide === "none" ? "pass" : "bet"),
+                  marginBottom: 5,
+                }}>
+                  {ba.mlValueSide === "none" ? "No Edge" : `${ba.mlValueSide.toUpperCase()} ML`}
+                </div>
+                {ba.mlValueSide !== "none" && (
+                  <div style={{ fontSize: 11, color: "var(--green)", fontFamily: "var(--font-mono)" }}>
+                    +{ba.mlValuePct.toFixed(1)}% edge
+                  </div>
+                )}
+                {ba.mlValueSide !== "none" && (
+                  <div style={{ fontSize: 11, color: "var(--text-2)", marginTop: 5, fontFamily: "var(--font-mono)" }}>
+                    ¼ Kelly: {(Math.max(ba.kellyHome, ba.kellyAway) * 100).toFixed(1)}% bankroll
+                  </div>
+                )}
               </div>
 
-              <div style={{ marginBottom: 16 }}>
-                <div style={{ fontSize: 11, color: "#7aaa5a", letterSpacing: 2, marginBottom: 8 }}>IMPLIED PROBABILITY vs MODEL</div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                  {([
-                    [homeTeam, odds.homeMoneyline, ba.homeImpliedProb, result.hWinProb, ba.homeEdge, hColor],
-                    [awayTeam, odds.awayMoneyline, ba.awayImpliedProb, result.aWinProb, ba.awayEdge, aColor],
-                  ] as [string, number, number, number, number, string][]).map(([abbr, ml, implied, model, edge, color]) => (
-                    <div key={abbr} style={{ background: "rgba(100,180,255,0.07)", border: `1px solid ${color}33`, borderRadius: 5, padding: "12px 14px" }}>
-                      <div style={{ fontSize: 11, fontWeight: 700, color, letterSpacing: 2, marginBottom: 10, fontFamily: "monospace" }}>{abbr}</div>
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 10 }}>
-                        <div style={{ background: "rgba(100,180,255,0.08)", borderRadius: 4, padding: "8px 10px" }}>
-                          <div style={{ fontSize: 9, color: "#6e7681", letterSpacing: 1, marginBottom: 4, fontFamily: "monospace" }}>VEGAS ML</div>
-                          <div style={{ fontSize: 22, fontWeight: 900, color: "#cae8ff", fontFamily: "'Barlow Condensed',Impact,monospace" }}>{ml > 0 ? "+" : ""}{ml}</div>
-                          <div style={{ fontSize: 10, color: "#6e7681", fontFamily: "monospace" }}>{(implied * 100).toFixed(1)}% impl.</div>
-                        </div>
-                        <div style={{ background: `${color}18`, borderRadius: 4, padding: "8px 10px" }}>
-                          <div style={{ fontSize: 9, color: "#6e7681", letterSpacing: 1, marginBottom: 4, fontFamily: "monospace" }}>MODEL ML</div>
-                          <div style={{ fontSize: 22, fontWeight: 900, color, fontFamily: "'Barlow Condensed',Impact,monospace" }}>{model >= 0.5 ? `-${Math.round((model / (1 - model)) * 100)}` : `+${Math.round(((1 - model) / model) * 100)}`}</div>
-                          <div style={{ fontSize: 10, color: "#6e7681", fontFamily: "monospace" }}>{(model * 100).toFixed(1)}% prob.</div>
-                        </div>
+              <div style={{
+                background: "rgba(0,0,0,0.2)",
+                border: `1px solid ${ba.puckLineRec !== "pass" ? "var(--green-border)" : "var(--border-1)"}`,
+                borderRadius: "var(--r)", padding: "12px 10px",
+              }}>
+                <div className="label" style={{ color: "var(--green)", marginBottom: 8 }}>Puck Line</div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, marginBottom: 10 }}>
+                  {[
+                    [homeTeam, odds.puckLine <= 0 ? "-1.5" : "+1.5", odds.puckLineHomeOdds],
+                    [awayTeam, odds.puckLine <= 0 ? "+1.5" : "-1.5", odds.puckLineAwayOdds],
+                  ].map(([abbr, line, odds_val]) => (
+                    <div key={String(abbr)} style={{ background: "rgba(255,255,255,0.04)", borderRadius: "var(--r-sm)", padding: "6px 8px" }}>
+                      <div style={{ fontSize: 9, color: "var(--text-3)", marginBottom: 3, fontFamily: "var(--font-mono)", textTransform: "uppercase" }}>
+                        {abbr} {line}
                       </div>
-                      <div style={{ height: 3, background: "rgba(100,180,255,0.15)", borderRadius: 2, marginBottom: 8, position: "relative" }}>
-                        <div style={{ position: "absolute", left: 0, top: 0, height: "100%", width: `${implied * 100}%`, background: "#475569", borderRadius: 2 }} />
-                        <div style={{ position: "absolute", left: 0, top: 0, height: "100%", width: `${model * 100}%`, background: color, borderRadius: 2, opacity: 0.8 }} />
-                      </div>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <span style={{ fontSize: 10, color: "#6e7681", fontFamily: "monospace", letterSpacing: 1 }}>EDGE</span>
-                        <span style={{ fontSize: 14, fontWeight: 900, color: edgeColor(edge * 100), fontFamily: "monospace" }}>{edge > 0 ? "+" : ""}{(edge * 100).toFixed(1)}%</span>
+                      <div style={{
+                        fontFamily: "'Big Shoulders Display', var(--font-display)",
+                        fontSize: 18, fontWeight: 700, color: "var(--text)", letterSpacing: "-0.01em",
+                      }}>
+                        {Number(odds_val) > 0 ? "+" : ""}{odds_val}
                       </div>
                     </div>
                   ))}
                 </div>
-              </div>
-
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-                <div style={{ background: "rgba(100,180,255,0.2)", border: `1px solid ${ba.mlValueSide !== "none" ? "rgba(74,222,128,0.2)" : "rgba(100,180,255,0.2)"}`, borderRadius: 5, padding: "12px 10px" }}>
-                  <div style={{ fontSize: 11, color: "#7aaa5a", letterSpacing: 2, marginBottom: 8 }}>MONEYLINE VALUE</div>
-                  <div style={{ fontSize: 15, fontWeight: 900, fontFamily: "'Barlow Condensed',Impact,monospace", color: recColor(ba.mlValueSide === "none" ? "pass" : "bet"), marginBottom: 4 }}>{ba.mlValueSide === "none" ? "NO EDGE" : `${ba.mlValueSide.toUpperCase()} ML`}</div>
-                  {ba.mlValueSide !== "none" && <div style={{ fontSize: 11, color: "#4ade80", fontFamily: "monospace" }}>+{ba.mlValuePct.toFixed(1)}% edge</div>}
-                  {ba.mlValueSide !== "none" && <div style={{ fontSize: 11, color: "#7aaa5a", marginTop: 6 }}>1/4 Kelly: {(Math.max(ba.kellyHome, ba.kellyAway) * 100).toFixed(1)}% bankroll</div>}
-                </div>
-
-                <div style={{ background: "rgba(100,180,255,0.07)", border: `1px solid ${ba.puckLineRec !== "pass" ? "rgba(74,222,128,0.3)" : "rgba(100,180,255,0.15)"}`, borderRadius: 5, padding: "12px 10px" }}>
-                  <div style={{ fontSize: 11, color: "#7aaa5a", letterSpacing: 2, marginBottom: 8 }}>PUCK LINE</div>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, marginBottom: 10 }}>
-                    <div style={{ background: "rgba(100,180,255,0.08)", borderRadius: 4, padding: "6px 8px" }}>
-                      <div style={{ fontSize: 9, color: "#6e7681", letterSpacing: 1, marginBottom: 3, fontFamily: "monospace" }}>{homeTeam} {odds.puckLine <= 0 ? "-1.5" : "+1.5"}</div>
-                      <div style={{ fontSize: 18, fontWeight: 900, color: "#cae8ff", fontFamily: "'Barlow Condensed',Impact,monospace" }}>{odds.puckLineHomeOdds > 0 ? "+" : ""}{odds.puckLineHomeOdds}</div>
-                    </div>
-                    <div style={{ background: "rgba(100,180,255,0.08)", borderRadius: 4, padding: "6px 8px" }}>
-                      <div style={{ fontSize: 9, color: "#6e7681", letterSpacing: 1, marginBottom: 3, fontFamily: "monospace" }}>{awayTeam} {odds.puckLine <= 0 ? "+1.5" : "-1.5"}</div>
-                      <div style={{ fontSize: 18, fontWeight: 900, color: "#cae8ff", fontFamily: "'Barlow Condensed',Impact,monospace" }}>{odds.puckLineAwayOdds > 0 ? "+" : ""}{odds.puckLineAwayOdds}</div>
-                    </div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div style={{
+                    fontFamily: "'Big Shoulders Display', var(--font-display)",
+                    fontSize: 15, fontWeight: 700, color: recColor(ba.puckLineRec),
+                  }}>
+                    {ba.puckLineRec === "pass" ? "Pass" : ba.puckLineRec.toUpperCase()}
                   </div>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <div style={{ fontSize: 14, fontWeight: 900, fontFamily: "'Barlow Condensed',Impact,monospace", color: recColor(ba.puckLineRec) }}>{ba.puckLineRec === "pass" ? "PASS" : ba.puckLineRec.toUpperCase()}</div>
-                    {ba.puckLineRec !== "pass" && <div style={{ fontSize: 11, color: "#4ade80", fontFamily: "monospace", fontWeight: 700 }}>+{ba.puckLineEdge.toFixed(1)}% edge</div>}
-                  </div>
-                  <div style={{ fontSize: 10, color: "#6e7681", fontFamily: "monospace", marginTop: 4 }}>Proj diff: {(parseFloat(result.hGoals) - parseFloat(result.aGoals) > 0 ? "+" : "")}{(parseFloat(result.hGoals) - parseFloat(result.aGoals)).toFixed(2)} goals</div>
+                  {ba.puckLineRec !== "pass" && (
+                    <div style={{ fontSize: 11, color: "var(--green)", fontFamily: "var(--font-mono)", fontWeight: 700 }}>
+                      +{ba.puckLineEdge.toFixed(1)}%
+                    </div>
+                  )}
                 </div>
-
-                <div style={{ background: "rgba(100,180,255,0.2)", border: `1px solid ${ba.ouRec !== "pass" ? "rgba(74,222,128,0.2)" : "rgba(100,180,255,0.2)"}`, borderRadius: 5, padding: "12px 10px" }}>
-                  <div style={{ fontSize: 11, color: "#7aaa5a", letterSpacing: 2, marginBottom: 8 }}>O/U {odds.overUnder}</div>
-                  <div style={{ fontSize: 15, fontWeight: 900, fontFamily: "'Barlow Condensed',Impact,monospace", color: recColor(ba.ouRec), marginBottom: 4 }}>{ba.ouRec === "pass" ? "PASS" : ba.ouRec.toUpperCase()}</div>
-                  <div style={{ fontSize: 11, color: ba.ouRec === "over" ? "#7dd3fc" : ba.ouRec === "under" ? "#f87171" : "#94a3b8", fontFamily: "monospace" }}>Model: {result.total} ({(Math.abs(ba.ouEdge) * 100).toFixed(1)}% edge)</div>
-                  <div style={{ fontSize: 11, color: "#7aaa5a", marginTop: 6 }}>{ba.ouRec === "pass" ? "Within margin" : "Price-adjusted total edge"}</div>
+                <div style={{ fontSize: 10, color: "var(--text-3)", fontFamily: "var(--font-mono)", marginTop: 4 }}>
+                  Proj diff: {(parseFloat(result.hGoals) - parseFloat(result.aGoals) > 0 ? "+" : "")}{(parseFloat(result.hGoals) - parseFloat(result.aGoals)).toFixed(2)} goals
                 </div>
               </div>
 
-              <div style={{ marginTop: 12, padding: "8px 10px", background: "rgba(251,191,36,0.05)", border: "1px solid rgba(251,191,36,0.1)", borderRadius: 4, fontSize: 10, color: "#c4a84a" }}>
-                For entertainment only. Edge calculations assume a 50% efficient market. Always verify lines with your sportsbook before wagering.
+              <div style={{
+                background: "rgba(0,0,0,0.2)",
+                border: `1px solid ${ba.ouRec !== "pass" ? "var(--green-border)" : "var(--border-1)"}`,
+                borderRadius: "var(--r)", padding: "12px 10px",
+              }}>
+                <div className="label" style={{ color: "var(--green)", marginBottom: 8 }}>O/U {odds.overUnder}</div>
+                <div style={{
+                  fontFamily: "'Big Shoulders Display', var(--font-display)",
+                  fontSize: 16, fontWeight: 700,
+                  color: recColor(ba.ouRec), marginBottom: 5,
+                }}>
+                  {ba.ouRec === "pass" ? "Pass" : ba.ouRec.toUpperCase()}
+                </div>
+                <div style={{
+                  fontSize: 11, fontFamily: "var(--font-mono)",
+                  color: ba.ouRec === "over" ? "var(--cyan)" : ba.ouRec === "under" ? "var(--red)" : "var(--text-2)",
+                }}>
+                  Model: {result.total} ({(Math.abs(ba.ouEdge) * 100).toFixed(1)}% edge)
+                </div>
+                <div style={{ fontSize: 11, color: "var(--text-2)", marginTop: 5, fontFamily: "var(--font-mono)" }}>
+                  {ba.ouRec === "pass" ? "Within margin" : "Price-adjusted total edge"}
+                </div>
               </div>
             </div>
-          );
-        })()
-      )}
 
-      <div style={{ background: "rgba(100,180,255,0.02)", border: "1px solid rgba(100,180,255,0.06)", borderRadius: 4, padding: "12px 16px", fontSize: 11, color: "#8faabf", lineHeight: 1.8 }}>
-        <span style={{ color: "#38bdf8" }}>MODEL NOTE: </span>
-        Corsi (shot attempt share) measures puck possession. xGF% weights shot quality.
-        <strong style={{ color: "#7dd3fc" }}> Goalie SV% is the single most predictive variable</strong> - a .010 difference translates to ~1 expected goal.
+            <div style={{
+              marginTop: 14, padding: "9px 12px",
+              background: "var(--amber-lo)", border: "1px solid var(--amber-border)",
+              borderRadius: "var(--r-sm)", fontSize: 10, color: "var(--amber)",
+              fontFamily: "var(--font-mono)",
+            }}>
+              For entertainment only. Edge calculations assume a 50% efficient market. Always verify lines with your sportsbook before wagering.
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Model note */}
+      <div style={{
+        background: "rgba(0,0,0,0.15)", border: "1px solid var(--border-0)",
+        borderRadius: "var(--r)", padding: "12px 16px",
+        fontSize: 11, color: "var(--text-2)", lineHeight: 1.8,
+        fontFamily: "var(--font-mono)",
+      }}>
+        <span style={{ color: "var(--cyan)" }}>Model Note: </span>
+        Corsi (shot attempt share) measures puck possession. xGF% weights shot quality.{" "}
+        <strong style={{ color: "var(--text)" }}>Goalie SV% is the single most predictive variable</strong> — a .010 difference translates to ~1 expected goal.
         PDO above 101 or below 99 signals unsustainable luck. Playoff games suppress scoring ~6%.
-        Ratings are {dataSource === "live" ? <span style={{ color: "#7dd3fc" }}>live - ESPN NHL API connected</span> : <span style={{ color: "#94a3b8" }}>estimated 2024-25 values - click Fetch ESPN Data for live colors</span>}.
+        Ratings are{" "}
+        {dataSource === "live"
+          ? <span style={{ color: "var(--cyan)" }}>live — ESPN NHL API connected</span>
+          : <span style={{ color: "var(--text-3)" }}>estimated 2024-25 values — click Fetch ESPN Data for live stats</span>
+        }.
       </div>
 
-      <button data-testid="export-single-game-button" onClick={onExportSingleGame} style={{ width: "100%", marginTop: 16, padding: "12px 0", background: "linear-gradient(135deg,#14532d,#166534)", border: "1px solid rgba(74,222,128,0.3)", borderRadius: 4, color: "#86efac", fontSize: 12, fontWeight: 900, letterSpacing: 4, fontFamily: "monospace", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
-        EXPORT TO CSV · GOOGLE SHEETS
+      {/* Export button */}
+      <button
+        data-testid="export-single-game-button"
+        onClick={onExportSingleGame}
+        className="btn btn-success"
+        style={{
+          width: "100%", marginTop: 16, padding: "13px 0",
+          fontSize: 12, letterSpacing: "0.14em",
+        }}
+      >
+        Export to CSV · Google Sheets
       </button>
     </div>
   );

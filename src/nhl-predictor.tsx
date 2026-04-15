@@ -90,19 +90,30 @@ export default function NHLModel() {
   } = useNhlPredictorController();
 
   return (
-    <div style={{ minHeight: "100vh", background: "linear-gradient(170deg,#0b1220 0%,#0e1628 50%,#0b1220 100%)", color: "#c8e8ff", fontFamily: "monospace", padding: "24px 20px" }}>
+    <div style={{
+      minHeight: "100vh",
+      background: `
+        radial-gradient(ellipse 100% 60% at 50% -8%, rgba(30,64,175,0.16) 0%, transparent 65%),
+        radial-gradient(ellipse 50% 35% at 95% 95%, rgba(124,58,237,0.07) 0%, transparent 50%),
+        linear-gradient(180deg, #060c17 0%, #0a1320 100%)
+      `,
+      color: "var(--text)",
+      fontFamily: "var(--font-mono)",
+      padding: "28px 20px 48px",
+    }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;700;900&display=swap');
-        @keyframes fadeUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
-        @keyframes pulse  { 0%,100%{opacity:1} 50%{opacity:0.15} }
-        @keyframes glint  { 0%,100%{opacity:0.6} 50%{opacity:1} }
-        .nhl-card { background:rgba(100,180,255,0.06); border:1px solid rgba(100,180,255,0.2); border-radius:6px; padding:18px; margin-bottom:14px; }
-        select option, select optgroup { background:#0d1520; color:#c8e8ff; }
+        @import url('https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@400;700;800;900&family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap');
       `}</style>
 
-      <div style={{ position: "fixed", top: 0, left: 0, right: 0, height: 3, zIndex: 100, background: "linear-gradient(90deg,#0ea5e9,#38bdf8,#7dd3fc,#38bdf8,#0ea5e9)", animation: "glint 3s ease infinite" }} />
+      {/* Top progress shimmer bar */}
+      <div style={{
+        position: "fixed", top: 0, left: 0, right: 0, height: 2, zIndex: 100,
+        background: "linear-gradient(90deg, #1d4ed8, #3b82f6, #22d3ee, #3b82f6, #1d4ed8)",
+        backgroundSize: "200% 100%",
+        animation: "topbarShimmer 4s linear infinite",
+      }} />
 
-      <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+      <div style={{ maxWidth: 1240, margin: "0 auto" }}>
         {activeTab === "predictor" ? (
           <>
             <DashboardHeader

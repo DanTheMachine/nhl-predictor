@@ -39,50 +39,63 @@ export function DashboardHeader({
 
   return (
     <>
-      <div style={{ marginBottom: 24, paddingTop: 8 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-          <div
-            style={{
-              width: 10,
-              height: 10,
-              borderRadius: "50%",
-              background: "#38bdf8",
-              boxShadow: "0 0 12px #38bdf8",
-              animation: "pulse 2s infinite",
-            }}
-          />
-          <span style={{ fontSize: 11, color: "#38bdf8", letterSpacing: 5, fontFamily: "'Barlow Condensed',monospace" }}>
-            NHL ANALYTICS ENGINE
+      {/* ── Hero Header ── */}
+      <div style={{ marginBottom: 28, paddingTop: 10 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+          <span className="dot dot--header" />
+          <span style={{
+            fontFamily: "var(--font-mono)",
+            fontSize: 10,
+            color: "var(--cyan)",
+            letterSpacing: "0.22em",
+            textTransform: "uppercase",
+            fontWeight: 500,
+          }}>
+            NHL Analytics Engine
           </span>
         </div>
-        <h1
-          style={{
-            fontFamily: "'Barlow Condensed',Impact,sans-serif",
-            fontSize: "clamp(34px,6vw,62px)",
-            fontWeight: 900,
-            margin: "4px 0 2px",
-            lineHeight: 1,
-            letterSpacing: 3,
-            color: "#c8e8ff",
-            textShadow: "0 0 40px rgba(56,189,248,0.2)",
-          }}
-        >
-          POWER PLAY <span style={{ color: "#38bdf8" }}>PREDICTOR</span>
+
+        <h1 style={{
+          fontFamily: "'Big Shoulders Display', var(--font-display)",
+          fontSize: "clamp(38px, 7vw, 76px)",
+          fontWeight: 900,
+          margin: "0 0 6px",
+          lineHeight: 0.95,
+          letterSpacing: "0.01em",
+          textTransform: "uppercase",
+          color: "var(--text)",
+        }}>
+          Power Play{" "}
+          <span style={{
+            background: "linear-gradient(120deg, #3b82f6, #22d3ee)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            backgroundClip: "text",
+          }}>
+            Predictor
+          </span>
         </h1>
-        <p style={{ fontSize: 11, color: "#8faabf", letterSpacing: 4, margin: 0 }}>
-          CORSI - FENWICK - XGF% - GOALIE SV% - PDO REGRESSION - 100,000 SIMULATIONS
+
+        <p style={{
+          fontFamily: "var(--font-mono)",
+          fontSize: 10,
+          color: "var(--text-3)",
+          letterSpacing: "0.18em",
+          textTransform: "uppercase",
+          margin: "0 0 16px",
+        }}>
+          Corsi · Fenwick · xGF% · Goalie SV% · PDO Regression · 100,000 Simulations
         </p>
+
+        {/* Tab switcher */}
         {activeTab && onTabChange && (
-          <div
-            style={{
-              marginTop: 14,
-              display: "inline-flex",
-              padding: 4,
-              borderRadius: 999,
-              background: "rgba(13,17,23,0.85)",
-              border: "1px solid rgba(125,211,252,0.16)",
-            }}
-          >
+          <div style={{
+            display: "inline-flex",
+            padding: 3,
+            borderRadius: "var(--r-full)",
+            background: "rgba(255,255,255,0.04)",
+            border: "1px solid var(--border-1)",
+          }}>
             {[
               { id: "predictor", label: "Predictor" },
               { id: "evaluation", label: "Model Eval" },
@@ -94,15 +107,20 @@ export function DashboardHeader({
                   onClick={() => onTabChange(tab.id as "predictor" | "evaluation")}
                   style={{
                     border: "none",
-                    borderRadius: 999,
-                    padding: "10px 18px",
-                    background: active ? "linear-gradient(135deg,#0f766e,#14b8a6)" : "transparent",
-                    color: active ? "#ecfeff" : "#9fb3c8",
+                    borderRadius: "var(--r-full)",
+                    padding: "9px 20px",
+                    background: active
+                      ? "linear-gradient(135deg, #1e3a8a, #1d4ed8)"
+                      : "transparent",
+                    color: active ? "#dbeafe" : "var(--text-2)",
                     fontSize: 11,
-                    fontWeight: 900,
-                    letterSpacing: 2,
-                    fontFamily: "monospace",
+                    fontWeight: 700,
+                    letterSpacing: "0.08em",
+                    textTransform: "uppercase",
+                    fontFamily: "var(--font-mono)",
                     cursor: "pointer",
+                    transition: "all 0.18s ease",
+                    boxShadow: active ? "0 2px 10px rgba(29,78,216,0.4)" : "none",
                   }}
                 >
                   {tab.label}
@@ -113,167 +131,152 @@ export function DashboardHeader({
         )}
       </div>
 
+      {/* ── Data Source Card ── */}
       <div
         className="nhl-card"
         style={{
           border: `1px solid ${
             dataSource === "live"
-              ? "rgba(125,211,252,0.3)"
+              ? "var(--green-border)"
               : dataSource === "fetching"
-                ? "rgba(56,189,248,0.3)"
-                : "rgba(100,180,255,0.2)"
+                ? "var(--cyan-border)"
+                : "var(--border-1)"
           }`,
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
           flexWrap: "wrap",
-          gap: 10,
+          gap: 12,
+          padding: "16px 20px",
         }}
       >
         <div>
-          <div style={{ fontSize: 11, color: "#8faabf", letterSpacing: 3, marginBottom: 5 }}>DATA SOURCE</div>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <div
-              style={{
-                width: 8,
-                height: 8,
-                borderRadius: "50%",
-                background: dataSource === "live" ? "#4ade80" : dataSource === "fetching" ? "#38bdf8" : "#475569",
-                boxShadow: dataSource === "live" ? "0 0 8px #4ade80" : "none",
-                animation: dataSource === "fetching" ? "pulse 0.8s infinite" : "none",
-              }}
+          <div className="label" style={{ marginBottom: 7 }}>Data Source</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+            <span
+              className={`dot ${
+                dataSource === "live"
+                  ? "dot--live"
+                  : dataSource === "fetching"
+                    ? "dot--fetch"
+                    : "dot--idle"
+              }`}
             />
-            <span style={{ fontSize: 12, color: dataSource === "live" ? "#4ade80" : dataSource === "fetching" ? "#38bdf8" : "#94a8bf" }}>
+            <span style={{
+              fontSize: 12,
+              fontFamily: "var(--font-mono)",
+              color: dataSource === "live"
+                ? "var(--green)"
+                : dataSource === "fetching"
+                  ? "var(--cyan)"
+                  : "var(--text-2)",
+            }}>
               {dataSource === "live"
                 ? fetchStatus
                 : dataSource === "fetching"
                   ? fetchStatus
                   : Object.keys(liveStats).length > 0
-                    ? `LIVE - ${Object.keys(liveStats).length} teams - updated ${statsLastUpdated}`
-                    : "ESTIMATED - 2026 values as of 3/30/26 - click Fetch to load live stats"}
+                    ? `Live · ${Object.keys(liveStats).length} teams · updated ${statsLastUpdated}`
+                    : "Estimated · 2026 values as of 3/30/26 · click Fetch to load live stats"}
             </span>
           </div>
-          {fetchError && <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 4 }}>Warning: {fetchError}</div>}
+          {fetchError && (
+            <div style={{ fontSize: 11, color: "var(--text-2)", marginTop: 5, fontFamily: "var(--font-mono)" }}>
+              Warning: {fetchError}
+            </div>
+          )}
         </div>
         <button
           onClick={onFetch}
           disabled={dataSource === "fetching"}
-          style={{
-            background: dataSource === "live" ? "rgba(125,211,252,0.07)" : "linear-gradient(135deg,#0284c7,#0369a1)",
-            border: dataSource === "live" ? "1px solid rgba(125,211,252,0.25)" : "none",
-            borderRadius: 4,
-            padding: "9px 18px",
-            color: dataSource === "live" ? "#7dd3fc" : "#e0f2fe",
-            fontSize: 11,
-            fontWeight: 900,
-            letterSpacing: 2,
-            fontFamily: "monospace",
-            cursor: dataSource === "fetching" ? "not-allowed" : "pointer",
-            whiteSpace: "nowrap",
-          }}
+          className={`btn ${dataSource === "live" ? "btn-cyan" : "btn-primary"}`}
         >
-          {dataSource === "fetching" ? "LOADING..." : dataSource === "live" ? "REFRESH" : "FETCH ESPN DATA"}
+          {dataSource === "fetching" ? "Loading…" : dataSource === "live" ? "Refresh" : "Fetch ESPN Data"}
         </button>
       </div>
 
-      <div className="nhl-card" style={{ border: "1px solid rgba(251,191,36,0.2)", background: "rgba(251,191,36,0.02)" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: showNstPanel ? 14 : 0 }}>
+      {/* ── Advanced Stats Import Card ── */}
+      <div
+        className="nhl-card"
+        style={{
+          border: "1px solid var(--amber-border)",
+          background: "rgba(251,191,36,0.018)",
+          padding: "16px 20px",
+        }}
+      >
+        <div style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: showNstPanel ? 16 : 0,
+        }}>
           <div>
-            <div style={{ fontSize: 11, color: "#c4a84a", letterSpacing: 3, marginBottom: 4 }}>ADVANCED STATS IMPORT</div>
-            <div style={{ fontSize: 11, color: nstStatus ? "#4ade80" : "#b3c0cc" }}>
+            <div className="label" style={{ color: "#c4a84a", marginBottom: 5 }}>Advanced Stats Import</div>
+            <div style={{
+              fontSize: 11,
+              fontFamily: "var(--font-mono)",
+              color: nstStatus ? "var(--green)" : "var(--text-2)",
+            }}>
               {nstStatus || "Paste Natural Stat Trick CSV to update CF% / xGF% / SV%"}
             </div>
           </div>
-          <button
-            onClick={onToggleNstPanel}
-            style={{
-              background: "rgba(251,191,36,0.08)",
-              border: "1px solid rgba(251,191,36,0.2)",
-              borderRadius: 4,
-              padding: "7px 14px",
-              color: "#c4a84a",
-              fontSize: 11,
-              fontWeight: 900,
-              letterSpacing: 2,
-              fontFamily: "monospace",
-              cursor: "pointer",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {showNstPanel ? "HIDE" : "IMPORT"}
+          <button onClick={onToggleNstPanel} className="btn btn-amber-ghost" style={{ fontSize: 10 }}>
+            {showNstPanel ? "Hide" : "Import"}
           </button>
         </div>
 
         {showNstPanel && (
           <div>
-            <div style={{ fontSize: 11, color: "#b3c0cc", marginBottom: 10, lineHeight: 1.7 }}>
-              <span style={{ color: "#c4a84a", fontWeight: 700 }}>How to get data: </span>
+            <div style={{
+              fontSize: 11,
+              fontFamily: "var(--font-mono)",
+              color: "var(--text-2)",
+              marginBottom: 12,
+              lineHeight: 1.7,
+            }}>
+              <span style={{ color: "var(--amber)", fontWeight: 700 }}>How to get data: </span>
               Go to{" "}
               <a
                 href="https://www.naturalstattrick.com/teamtable.php"
                 target="_blank"
                 rel="noopener noreferrer"
-                style={{ color: "#7dd3fc", textDecoration: "underline", cursor: "pointer" }}
               >
                 naturalstattrick.com
               </a>
-              , then Team Summary, then select current season, then All Situations or 5v5, then copy the entire table and paste below. Columns auto-detected. Imports: CF%, FF%, xGF%, SV%, PP%, PK%, PDO.
+              {" "}→ Team Summary → current season → All Situations or 5v5 → copy entire table and paste below.
+              Columns auto-detected. Imports: CF%, FF%, xGF%, SV%, PP%, PK%, PDO.
             </div>
             <textarea
               value={nstPaste}
               onChange={(e) => onNstPasteChange(e.target.value)}
-              placeholder="Team  GP  CF%  FF%  xGF%  SV%  PP%  PK%  PDO...  (paste NST table here)"
+              placeholder="Team  GP  CF%  FF%  xGF%  SV%  PP%  PK%  PDO…  (paste NST table here)"
               style={{
                 width: "100%",
                 height: 120,
-                background: "#0d1117",
-                border: "1px solid rgba(251,191,36,0.2)",
-                borderRadius: 4,
-                color: "#c8e8ff",
+                background: "rgba(0,0,0,0.35)",
+                border: "1px solid var(--amber-border)",
+                borderRadius: "var(--r)",
+                color: "var(--text)",
                 fontSize: 11,
-                fontFamily: "monospace",
-                padding: 10,
+                fontFamily: "var(--font-mono)",
+                padding: "10px 12px",
                 resize: "vertical",
                 boxSizing: "border-box",
+                outline: "none",
               }}
             />
             <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
               <button
                 onClick={onParseNstData}
                 disabled={!nstPaste.trim()}
-                style={{
-                  flex: 1,
-                  padding: "9px 0",
-                  background: nstPaste.trim() ? "linear-gradient(135deg,#b45309,#92400e)" : "rgba(100,180,255,0.04)",
-                  border: nstPaste.trim() ? "none" : "1px solid rgba(100,180,255,0.08)",
-                  borderRadius: 4,
-                  color: nstPaste.trim() ? "#fef3c7" : "#3d444d",
-                  fontSize: 11,
-                  fontWeight: 900,
-                  letterSpacing: 3,
-                  fontFamily: "monospace",
-                  cursor: nstPaste.trim() ? "pointer" : "not-allowed",
-                }}
+                className="btn btn-warning"
+                style={{ flex: 1, padding: "9px 0" }}
               >
-                APPLY NST DATA
+                Apply NST Data
               </button>
               {hasNstData && (
-                <button
-                  onClick={onClearNstData}
-                  style={{
-                    padding: "9px 14px",
-                    background: "rgba(248,81,73,0.08)",
-                    border: "1px solid rgba(248,81,73,0.2)",
-                    borderRadius: 4,
-                    color: "#f85149",
-                    fontSize: 11,
-                    fontWeight: 900,
-                    letterSpacing: 2,
-                    fontFamily: "monospace",
-                    cursor: "pointer",
-                  }}
-                >
-                  CLEAR
+                <button onClick={onClearNstData} className="btn btn-ghost" style={{ color: "var(--red)" }}>
+                  Clear
                 </button>
               )}
             </div>

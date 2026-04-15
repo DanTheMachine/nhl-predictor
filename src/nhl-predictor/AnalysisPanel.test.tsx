@@ -153,7 +153,7 @@ describe("AnalysisPanel", () => {
 
     render(<AnalysisPanel linesRows={[row]} resultsStatus="" resultsRunning={false} />);
 
-    expect(screen.getAllByText("Vegas - Edited")).toHaveLength(3);
+    expect(screen.getAllByText("Vegas (Edited)")).toHaveLength(3);
     expect(screen.queryByText("Vegas line")).not.toBeInTheDocument();
   });
 });
