@@ -11,9 +11,9 @@ test.describe('NHL Predictor', () => {
     await page.getByTestId('run-simulation-button').click()
 
     await expect(page.getByTestId('simulation-results')).toBeVisible()
-    await expect(page.getByText('PLAYOFF MODE')).toBeVisible()
-    await expect(page.getByText('PROJECTED GOALS')).toBeVisible()
-    await expect(page.getByText('MODEL INPUTS')).toBeVisible()
+    await expect(page.getByText('Playoff Mode')).toBeVisible()
+    await expect(page.getByText('Projected Goals')).toBeVisible()
+    await expect(page.getByText('Model Inputs')).toBeVisible()
   })
 
   test('applies manual odds and exports a single-game CSV', async ({ page }) => {
@@ -37,7 +37,7 @@ test.describe('NHL Predictor', () => {
 
     await expect(page.getByTestId('odds-status')).toContainText('Manual lines applied')
     await expect(page.getByTestId('betting-analysis')).toBeVisible()
-    await expect(page.getByTestId('betting-analysis')).toContainText('MONEYLINE VALUE')
+    await expect(page.getByTestId('betting-analysis')).toContainText('Moneyline Value')
 
     const [download] = await Promise.all([
       page.waitForEvent('download'),
