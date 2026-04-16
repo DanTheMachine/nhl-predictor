@@ -16,6 +16,24 @@ test.describe('NHL Predictor', () => {
     await expect(page.getByText('Model Inputs')).toBeVisible()
   })
 
+  test('navigates to the Model Eval tab and back', async ({ page }) => {
+    await page.goto('/')
+
+    // The header renders two tab buttons: "Predictor" and "Model Eval"
+    const evalTab = page.getByRole('button', { name: 'Model Eval' })
+    await expect(evalTab).toBeVisible()
+    await evalTab.click()
+
+    // The Evaluation panel should become visible (heading rendered as "MODEL EVALUATION")
+    await expect(page.getByText('MODEL EVALUATION')).toBeVisible()
+
+    // Navigate back to the Predictor tab
+    await page.getByRole('button', { name: 'Predictor' }).click()
+
+    // Single-game toggle should be present again
+    await expect(page.getByTestId('single-game-toggle')).toBeVisible()
+  })
+
   test('applies manual odds and exports a single-game CSV', async ({ page }) => {
     await page.goto('/')
     await page.getByTestId('single-game-toggle').click()

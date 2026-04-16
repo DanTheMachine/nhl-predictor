@@ -327,3 +327,164 @@ describe('mlAmerican', () => {
     expect(mlAmerican(1)).toBe('N/A')
   })
 })
+
+describe('ice-condition scoring adjustments', () => {
+  // The engine applies ICE_CONDITIONS[homeTeam.ice].scoringAdj to both teams'
+  // expected goals, so a higher-altitude home venue lifts the projected total.
+
+  it('COL home (altitude, 1.04×) projects a higher total than the same game at a standard rink', () => {
+    const colHome = predictGame({
+      homeTeam: 'COL',
+      awayTeam: 'DAL',
+      gameType: 'Regular Season',
+      homeB2B: false,
+      awayB2B: false,
+    })
+
+    const dalHome = predictGame({
+      homeTeam: 'DAL',
+      awayTeam: 'COL',
+      gameType: 'Regular Season',
+      homeB2B: false,
+      awayB2B: false,
+    })
+
+    // When COL hosts, the altitude multiplier inflates both sides' goals
+    expect(Number(colHome.total)).toBeGreaterThan(Number(dalHome.total))
+  })
+
+  it('BOS home (hybrid, 1.01×) projects a modestly higher total than a standard road venue', () => {
+    const bosHome = predictGame({
+      homeTeam: 'BOS',
+      awayTeam: 'NYR',
+      gameType: 'Regular Season',
+      homeB2B: false,
+      awayB2B: false,
+    })
+
+    const nyrHome = predictGame({
+      homeTeam: 'NYR',
+      awayTeam: 'BOS',
+      gameType: 'Regular Season',
+      homeB2B: false,
+      awayB2B: false,
+    })
+
+    // Both venues are standard or hybrid; the hybrid bump should still be visible
+    expect(Number(bosHome.total)).toBeGreaterThan(Number(nyrHome.total))
+  })
+
+  it('altitude lift (4%) exceeds the hybrid lift (1%) on the same baseline game totals', () => {
+    // To isolate the ice multiplier, run COL vs X with COL as home (altitude, 1.04×)
+    // and then as away while X (standard) is home (1.0×). The difference in totals
+    // reflects the altitude vs standard gap. Repeat for BOS (hybrid, 1.01×).
+    const colHome = predictGame({
+      homeTeam: 'COL',
+      awayTeam: 'MIN',
+      gameType: 'Regular Season',
+      homeB2B: false,
+      awayB2B: false,
+    })
+    const colAway = predictGame({
+      homeTeam: 'MIN',
+      awayTeam: 'COL',
+      gameType: 'Regular Season',
+      homeB2B: false,
+      awayB2B: false,
+    })
+
+    const bosHome = predictGame({
+      homeTeam: 'BOS',
+      awayTeam: 'MIN',
+      gameType: 'Regular Season',
+      homeB2B: false,
+      awayB2B: false,
+    })
+    const bosAway = predictGame({
+      homeTeam: 'MIN',
+      awayTeam: 'BOS',
+      gameType: 'Regular Season',
+      homeB2B: false,
+      awayB2B: false,
+    })
+
+    // The altitude bump (4%) should produce a larger home/away delta than the hybrid bump (1%)
+    const altitudeDelta = Number(colHome.total) - Number(colAway.total)
+    const hybridDelta = Number(bosHome.total) - Number(bosAway.total)
+
+    expect(altitudeDelta).toBeGreaterThan(hybridDelta)
+  })
+})
+
+describe('PDO luck labels', () => {
+  it('labels a team with PDO >= 100 as Running hot', () => {
+    // COL has pdo: 102.1
+    const result = predictGame({
+      homeTeam: 'COL',
+      awayTeam: 'CHI',
+      gameType: 'Regular Season',
+      homeB2B: false,
+      awayB2B: false,
+    })
+
+    expect(result.hPDOLuck).toBe('Running hot')
+  })
+
+  it('labels a team with PDO < 100 as Running cold', () => {
+    // CHI has pdo: 99.7
+    const result = predictGame({
+      homeTeam: 'COL',
+      awayTeam: 'CHI',
+      gameType: 'Regular Season',
+      homeB2B: false,
+      awayB2B: false,
+    })
+
+    expect(result.aPDOLuck).toBe('Running cold')
+  })
+
+  it('PDO label flips correctly when cold team becomes home', () => {
+    // NJD has pdo: 97.1 — should be Running cold as home
+    const result = predictGame({
+      homeTeam: 'NJD',
+      awayTeam: 'BOS',
+      gameType: 'Regular Season',
+      homeB2B: false,
+      awayB2B: false,
+    })
+
+    expect(result.hPDOLuck).toBe('Running cold')
+    // BOS pdo: 102.2
+    expect(result.aPDOLuck).toBe('Running hot')
+  })
+
+  it('live-stat PDO override updates the luck label', () => {
+    // BOS baseline PDO is 102.2 (hot); supply live stats with PDO 99.1 → cold
+    const result = predictGame({
+      homeTeam: 'BOS',
+      awayTeam: 'CHI',
+      gameType: 'Regular Season',
+      homeB2B: false,
+      awayB2B: false,
+      liveStats: {
+        BOS: {
+          cf: 51,
+          ff: 51,
+          xgf: 51,
+          pdo: 99.1,
+          goalieSV: 0.91,
+          shootingPct: 9.5,
+          ppPct: 22,
+          pkPct: 80,
+          gf: 2.6,
+          ga: 2.2,
+          srs: 0.3,
+          gp: 20,
+          lastUpdated: '2026-04-01T00:00:00Z',
+        },
+      },
+    })
+
+    expect(result.hPDOLuck).toBe('Running cold')
+  })
+})
