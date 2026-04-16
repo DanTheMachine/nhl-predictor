@@ -64,13 +64,14 @@ export function AnalysisPanel({ linesRows, resultsStatus, resultsRunning }: Anal
 
     if (betting.mlValueSide !== "none") {
       const isHome = betting.mlValueSide === "home";
+      const teamAbbr = isHome ? row.game.homeAbbr : row.game.awayAbbr;
       const moneyline = isHome ? odds.homeMoneyline : odds.awayMoneyline;
       const kelly = isHome ? betting.kellyHome : betting.kellyAway;
       const prob = isHome ? sim.hWinProb : sim.aWinProb;
       bets.push({
         gameLabel, gameTime,
         betType: "ML",
-        side: `${betting.mlValueSide.toUpperCase()} ML`,
+        side: `${teamAbbr} ML`,
         modelProb: `${(prob * 100).toFixed(0)}% win`,
         odds: moneyline,
         edgePct: betting.mlValuePct,
@@ -80,6 +81,8 @@ export function AnalysisPanel({ linesRows, resultsStatus, resultsRunning }: Anal
 
     if (betting.puckLineRec !== "pass") {
       const isHomePL = betting.puckLineRec.startsWith("home");
+      const teamAbbr = isHomePL ? row.game.homeAbbr : row.game.awayAbbr;
+      const lineStr = betting.puckLineRec.replace(/^home|^away/, "").trim().toUpperCase();
       const moneyline = isHomePL ? odds.puckLineHomeOdds : odds.puckLineAwayOdds;
       const projDiff = parseFloat(sim.hGoals) - parseFloat(sim.aGoals);
       const homeFav = odds.puckLine <= 0;
@@ -89,7 +92,7 @@ export function AnalysisPanel({ linesRows, resultsStatus, resultsRunning }: Anal
       bets.push({
         gameLabel, gameTime,
         betType: "PL",
-        side: betting.puckLineRec.toUpperCase(),
+        side: `${teamAbbr} ${lineStr}`,
         modelProb: `${(cover * 100).toFixed(0)}% cover`,
         odds: moneyline,
         edgePct: betting.puckLineEdge,
@@ -163,7 +166,7 @@ export function AnalysisPanel({ linesRows, resultsStatus, resultsRunning }: Anal
                         <span style={{ color: "var(--text-2)", fontWeight: 400, fontSize: 13 }}>at</span>{" "}
                         {row.game.homeAbbr}
                       </div>
-                      <div style={{ fontSize: 10, color: "var(--text-3)", marginTop: 2 }}>{row.game.gameTime}</div>
+                      <div style={{ fontSize: 10, color: "var(--text-2)", marginTop: 2 }}>{row.game.gameTime}</div>
                     </div>
                     <div style={{ display: "flex", gap: 5, flexWrap: "wrap", justifyContent: "flex-end" }}>
                       {row.homeB2B && <span className="chip chip--red">{row.game.homeAbbr} B2B</span>}
@@ -197,7 +200,7 @@ export function AnalysisPanel({ linesRows, resultsStatus, resultsRunning }: Anal
                         </span>
                       </div>
                     </div>
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 9, color: "var(--text-3)", marginTop: 4 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 9, color: "var(--text-2)", marginTop: 4 }}>
                       <span>{row.game.homeAbbr} (home)</span>
                       <span>{row.game.awayAbbr} (away)</span>
                     </div>
@@ -213,17 +216,17 @@ export function AnalysisPanel({ linesRows, resultsStatus, resultsRunning }: Anal
                       border: `1px solid ${betting.mlValueSide !== "none" ? "var(--green-border)" : "var(--border-0)"}`,
                     }}>
                       <div className="label" style={{ marginBottom: 6 }}>ML</div>
-                      <div style={{ fontSize: 9, color: "var(--text-3)", marginBottom: 2 }}>{vegasLabel}</div>
+                      <div style={{ fontSize: 9, color: "var(--text-2)", marginBottom: 2 }}>{vegasLabel}</div>
                       <div style={{ fontSize: 10, color: "var(--text)", marginBottom: 6, lineHeight: 1.4 }}>
                         {row.game.homeAbbr} {odds.homeMoneyline > 0 ? "+" : ""}{odds.homeMoneyline}<br />
                         {row.game.awayAbbr} {odds.awayMoneyline > 0 ? "+" : ""}{odds.awayMoneyline}
                       </div>
                       {vegasHomeProb && (
-                        <div style={{ fontSize: 9, color: "var(--text-3)", marginBottom: 4 }}>
+                        <div style={{ fontSize: 9, color: "var(--text-2)", marginBottom: 4 }}>
                           Impl: {vegasHomeProb.toFixed(0)}% / {vegasAwayProb!.toFixed(0)}%
                         </div>
                       )}
-                      <div style={{ fontSize: 9, color: "var(--text-3)", marginBottom: 2 }}>Model</div>
+                      <div style={{ fontSize: 9, color: "var(--text-2)", marginBottom: 2 }}>Model</div>
                       <div style={{ fontSize: 10, color: "var(--cyan)", marginBottom: 6 }}>
                         {hProb.toFixed(1)}% / {aProb.toFixed(1)}%
                       </div>
@@ -251,11 +254,11 @@ export function AnalysisPanel({ linesRows, resultsStatus, resultsRunning }: Anal
                       border: `1px solid ${betting.puckLineRec !== "pass" ? "var(--green-border)" : "var(--border-0)"}`,
                     }}>
                       <div className="label" style={{ marginBottom: 6 }}>Puck Line</div>
-                      <div style={{ fontSize: 9, color: "var(--text-3)", marginBottom: 2 }}>{vegasLabel}</div>
+                      <div style={{ fontSize: 9, color: "var(--text-2)", marginBottom: 2 }}>{vegasLabel}</div>
                       <div style={{ fontSize: 10, color: "var(--text)", marginBottom: 6 }}>
                         {row.game.homeAbbr} {odds.puckLine <= 0 ? "-1.5" : "+1.5"} ({odds.puckLineHomeOdds > 0 ? "+" : ""}{odds.puckLineHomeOdds})
                       </div>
-                      <div style={{ fontSize: 9, color: "var(--text-3)", marginBottom: 2 }}>Model cover%</div>
+                      <div style={{ fontSize: 9, color: "var(--text-2)", marginBottom: 2 }}>Model cover%</div>
                       <div style={{ fontSize: 10, color: "var(--cyan)", marginBottom: 6 }}>{(() => {
                         const homeFav = (odds.puckLine ?? -1.5) <= 0;
                         const favDiff = homeFav ? projDiff : -projDiff;
@@ -282,11 +285,11 @@ export function AnalysisPanel({ linesRows, resultsStatus, resultsRunning }: Anal
                       border: `1px solid ${betting.ouRec !== "pass" ? "var(--green-border)" : "var(--border-0)"}`,
                     }}>
                       <div className="label" style={{ marginBottom: 6 }}>O/U</div>
-                      <div style={{ fontSize: 9, color: "var(--text-3)", marginBottom: 2 }}>{vegasLabel}</div>
+                      <div style={{ fontSize: 9, color: "var(--text-2)", marginBottom: 2 }}>{vegasLabel}</div>
                       <div style={{ fontSize: 10, color: "var(--text)", marginBottom: 6 }}>
                         {odds.overUnder.toFixed(1)} ({odds.overOdds > 0 ? "+" : ""}{odds.overOdds} / {odds.underOdds > 0 ? "+" : ""}{odds.underOdds})
                       </div>
-                      <div style={{ fontSize: 9, color: "var(--text-3)", marginBottom: 2 }}>Model total</div>
+                      <div style={{ fontSize: 9, color: "var(--text-2)", marginBottom: 2 }}>Model total</div>
                       <div style={{ fontSize: 10, color: "var(--cyan)", marginBottom: 6 }}>
                         {sim.total}{" "}
                         <span style={{ color: edgeColorDirect(Math.abs(betting.ouEdge) * 100) }}>
@@ -363,7 +366,7 @@ export function AnalysisPanel({ linesRows, resultsStatus, resultsRunning }: Anal
                                   ? `${(betting.kellyAway * 100).toFixed(1)}%`
                                   : `${(Math.max(betting.kellyHome, betting.kellyAway) * 100).toFixed(1)}%`}
                             </span>
-                            <span style={{ color: "var(--text-3)", fontSize: 9 }}> of bankroll</span>
+                            <span style={{ color: "var(--text-2)", fontSize: 9 }}> of bankroll</span>
                           </div>
                         )}
                       </div>
@@ -389,7 +392,7 @@ export function AnalysisPanel({ linesRows, resultsStatus, resultsRunning }: Anal
             padding: "5px 12px",
             fontFamily: "var(--font-mono)",
             fontSize: 9, fontWeight: 700,
-            color: "var(--text-3)",
+            color: "var(--text-2)",
             letterSpacing: "0.1em",
             textTransform: "uppercase",
             borderBottom: "1px solid var(--border-1)",
@@ -427,7 +430,7 @@ export function AnalysisPanel({ linesRows, resultsStatus, resultsRunning }: Anal
                   }}>
                     {bet.betType} — {bet.side}
                   </span>
-                  <span style={{ fontSize: 10, color: "var(--text-3)" }}>
+                  <span style={{ fontSize: 10, color: bet.betType === "O/U" ? "var(--green)" : "var(--text-2)", fontWeight: bet.betType === "O/U" ? 700 : 400 }}>
                     {" "}· {bet.gameLabel} · {bet.gameTime}
                   </span>
                 </div>
@@ -528,7 +531,7 @@ export function AnalysisPanel({ linesRows, resultsStatus, resultsRunning }: Anal
             <div><span style={{ color: "var(--text-2)" }}>ML Hit</span> <span style={{ color: "var(--amber)" }}>{'=IF(OR(ActualWinner_col="",MLValueSide_col=""),"",IF(ActualWinner_col=MLValueSide_col,1,0))'}</span></div>
             <div><span style={{ color: "var(--text-2)" }}>O/U Hit</span> <span style={{ color: "var(--amber)" }}>{'=IF(OR(ActualTotal_col="",OURec_col="",OURec_col="pass"),"",IF((ActualTotal_col>VegasOU_col)=(OURec_col="over"),1,0))'}</span></div>
             <div><span style={{ color: "var(--text-2)" }}>PL Hit</span> <span style={{ color: "var(--amber)" }}>{'=IF(OR(ActualHomeDiff_col="",PLRec_col="",PLRec_col="pass"),"",IF(PLRec_col="home -1.5",(ActualHomeDiff_col>1)*1,(ActualHomeDiff_col<-1)*1))'}</span></div>
-            <div style={{ color: "var(--text-3)", fontSize: 9, marginTop: 4 }}>Replace `_col` references with actual column letters after setup.</div>
+            <div style={{ color: "var(--text-2)", fontSize: 9, marginTop: 4 }}>Replace `_col` references with actual column letters after setup.</div>
           </div>
           <div style={{
             marginTop: 10, padding: "8px 12px",
@@ -538,7 +541,7 @@ export function AnalysisPanel({ linesRows, resultsStatus, resultsRunning }: Anal
           }}>
             <span style={{ color: "var(--green)" }}>One-time setup:</span> formulas use header names via MATCH, so they still work if CSV columns shift later.
           </div>
-          <div style={{ marginTop: 6, color: "var(--text-3)", fontSize: 11 }}>
+          <div style={{ marginTop: 6, color: "var(--text-2)", fontSize: 11 }}>
             First import: File → Import → Upload. After that, paste into the existing sheet at the next empty row.
           </div>
         </div>

@@ -238,7 +238,7 @@ export function TeamCard({ abbr, side, espnData, liveStats }: TeamCardProps) {
           ["SRS",  `${stats.srs >= 0 ? "+" : ""}${stats.srs.toFixed(2)}`],
         ] as [string, string][]).map(([label, value]) => (
           <div key={label}>
-            <div style={{ fontSize: 9, color: "var(--text-3)", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 1 }}>{label}</div>
+            <div style={{ fontSize: 9, color: "var(--text-2)", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 1 }}>{label}</div>
             <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text)", fontFamily: "var(--font-mono)" }}>{value}</div>
           </div>
         ))}

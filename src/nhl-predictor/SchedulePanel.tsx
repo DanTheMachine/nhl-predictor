@@ -237,7 +237,7 @@ export function SchedulePanel({
                 <div>* +/- 1 1/2 ODDS</div>
                 <div>* O/U LINE ODDS</div>
                 <div>* MONEYLINE</div>
-                <div style={{ marginTop: 6, color: "var(--text-3)" }}>TV and time lines are skipped automatically.</div>
+                <div style={{ marginTop: 6, color: "var(--text-2)" }}>TV and time lines are skipped automatically.</div>
               </div>
             </div>
           </div>
@@ -537,7 +537,7 @@ export function SchedulePanel({
                             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
                               <div className="label" style={{ color: "var(--amber)" }}>Goalie Override</div>
                               {!hasLoadedGoalies && (
-                                <span style={{ fontSize: 10, color: "var(--text-3)", fontFamily: "var(--font-mono)" }}>
+                                <span style={{ fontSize: 10, color: "var(--text-2)", fontFamily: "var(--font-mono)" }}>
                                   load goalies above for quick-pick, or enter manually below
                                 </span>
                               )}
@@ -569,7 +569,7 @@ export function SchedulePanel({
                                         {estimatedLabel === "1st" ? "Estimated Regular Starting Goalie" : "Estimated Backup Goalie"}
                                       </div>
                                     )}
-                                    <div style={{ fontSize: 9, color: "var(--text-3)", marginBottom: 6, fontFamily: "var(--font-mono)" }}>
+                                    <div style={{ fontSize: 9, color: "var(--text-2)", marginBottom: 6, fontFamily: "var(--font-mono)" }}>
                                       Team default SV%: .{defaultSV ? (defaultSV * 1000).toFixed(0) : "???"}
                                     </div>
 
@@ -624,7 +624,7 @@ export function SchedulePanel({
                                               border: "1px solid var(--border-1)",
                                               borderRadius: "var(--r-sm)",
                                               padding: "4px 9px",
-                                              color: "var(--text-3)",
+                                              color: "var(--text-2)",
                                               fontSize: 10,
                                               cursor: "pointer",
                                               fontFamily: "var(--font-mono)",
@@ -674,7 +674,7 @@ export function SchedulePanel({
                                           outline: "none",
                                         }}
                                       />
-                                      <span style={{ fontSize: 9, color: "var(--text-3)", fontFamily: "var(--font-mono)" }}>or type SV% (e.g. 905)</span>
+                                      <span style={{ fontSize: 9, color: "var(--text-2)", fontFamily: "var(--font-mono)" }}>or type SV% (e.g. 905)</span>
                                     </div>
                                   </div>
                                 );

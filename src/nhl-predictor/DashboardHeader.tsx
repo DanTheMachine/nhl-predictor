@@ -79,7 +79,7 @@ export function DashboardHeader({
         <p style={{
           fontFamily: "var(--font-mono)",
           fontSize: 10,
-          color: "var(--text-3)",
+          color: "var(--text-2)",
           letterSpacing: "0.18em",
           textTransform: "uppercase",
           margin: "0 0 16px",
