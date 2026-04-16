@@ -119,7 +119,7 @@ export function SchedulePanel({
             <button
               onClick={onRunAllSims}
               disabled={simsRunning}
-              className="btn btn-amber"
+              className={`btn ${hasSimResults ? "btn-primary" : "btn-cyan"}`}
               style={{ fontSize: 10 }}
             >
               {simsRunning ? "Running…" : "Run All Sims"}
@@ -317,9 +317,9 @@ export function SchedulePanel({
                         {row.game.gameTime}
                       </td>
                       <td style={{ ...tdStyle, whiteSpace: "nowrap" }}>
-                        <span style={{ fontWeight: 700, color: "var(--text)" }}>{row.game.homeAbbr}</span>
-                        <span style={{ color: "var(--text-3)", margin: "0 5px" }}>vs</span>
                         <span style={{ fontWeight: 700, color: "var(--text)" }}>{row.game.awayAbbr}</span>
+                        <span style={{ color: "var(--text-2)", margin: "0 5px" }}>at</span>
+                        <span style={{ fontWeight: 700, color: "var(--text)" }}>{row.game.homeAbbr}</span>
                         {edited && <span className="chip chip--amber" style={{ marginLeft: 6 }}>Edited</span>}
                       </td>
                       {([odds?.homeMoneyline, odds?.awayMoneyline, odds?.overUnder, odds?.puckLineHomeOdds, odds?.puckLineAwayOdds] as (number | undefined)[]).map((value, valueIndex) => {
@@ -357,12 +357,12 @@ export function SchedulePanel({
                       <td style={{ ...tdStyle, whiteSpace: "nowrap" }}>
                         {betting ? (
                           <span style={{ color: hasValue ? "var(--green)" : "var(--text-3)", fontWeight: hasValue ? 700 : 400 }}>
-                            {hasValue ? `${betting.mlValueSide.toUpperCase()} +${betting.mlValuePct.toFixed(1)}%` : "PASS"}
+                            {hasValue ? `${betting.mlValueSide === "home" ? row.game.homeAbbr : row.game.awayAbbr} +${betting.mlValuePct.toFixed(1)}%` : "PASS"}
                           </span>
                         ) : "-"}
                       </td>
                       <td style={{ ...tdStyle, color: betting && betting.puckLineRec !== "pass" ? "var(--green)" : "var(--text-3)", fontWeight: betting && betting.puckLineRec !== "pass" ? 700 : 400, whiteSpace: "nowrap" }}>
-                        {betting ? (betting.puckLineRec === "pass" ? "PASS" : betting.puckLineRec.toUpperCase()) : "-"}
+                        {betting ? (betting.puckLineRec === "pass" ? "PASS" : betting.puckLineRec.replace(/^home/, row.game.homeAbbr).replace(/^away/, row.game.awayAbbr).toUpperCase()) : "-"}
                       </td>
                       <td style={{ ...tdStyle, color: betting && betting.ouRec !== "pass" ? "var(--green)" : "var(--text-3)", fontWeight: betting && betting.ouRec !== "pass" ? 700 : 400 }}>
                         {betting ? (betting.ouRec === "pass" ? "PASS" : `${betting.ouRec.toUpperCase()} (+${(Math.abs(betting.ouEdge) * 100).toFixed(1)}%)`) : "-"}

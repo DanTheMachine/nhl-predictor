@@ -269,7 +269,7 @@ export function DashboardHeader({
               <button
                 onClick={onParseNstData}
                 disabled={!nstPaste.trim()}
-                className="btn btn-warning"
+                className="btn btn-amber"
                 style={{ flex: 1, padding: "9px 0" }}
               >
                 Apply NST Data

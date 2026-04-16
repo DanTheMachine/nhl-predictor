@@ -159,9 +159,9 @@ export function AnalysisPanel({ linesRows, resultsStatus, resultsRunning }: Anal
                         fontSize: 16, fontWeight: 700,
                         color: "var(--text)", letterSpacing: "-0.01em",
                       }}>
-                        {row.game.homeAbbr}{" "}
-                        <span style={{ color: "var(--text-3)", fontWeight: 400, fontSize: 13 }}>vs</span>{" "}
-                        {row.game.awayAbbr}
+                        {row.game.awayAbbr}{" "}
+                        <span style={{ color: "var(--text-2)", fontWeight: 400, fontSize: 13 }}>at</span>{" "}
+                        {row.game.homeAbbr}
                       </div>
                       <div style={{ fontSize: 10, color: "var(--text-3)", marginTop: 2 }}>{row.game.gameTime}</div>
                     </div>
@@ -232,7 +232,7 @@ export function AnalysisPanel({ linesRows, resultsStatus, resultsRunning }: Anal
                           <span style={{ fontSize: 9, color: "var(--text-3)" }}>Pass</span>
                         ) : (
                           <span style={{ fontSize: 10, fontWeight: 700, color: "var(--green)" }}>
-                            {betting.mlValueSide.toUpperCase()} +{betting.mlValuePct.toFixed(1)}%
+                            {betting.mlValueSide === "home" ? row.game.homeAbbr : row.game.awayAbbr} +{betting.mlValuePct.toFixed(1)}%
                             {Math.max(betting.kellyHome, betting.kellyAway) > 0 && (
                               <span style={{ color: "var(--amber)", fontWeight: 400 }}>
                                 {" "}({(Math.max(betting.kellyHome, betting.kellyAway) * 100).toFixed(1)}% K)
@@ -269,7 +269,7 @@ export function AnalysisPanel({ linesRows, resultsStatus, resultsRunning }: Anal
                           fontWeight: betting.puckLineRec !== "pass" ? 700 : 400,
                           color: recColorDirect(betting.puckLineRec, betting.puckLineEdge),
                         }}>
-                          {betting.puckLineRec === "pass" ? "Pass" : `${betting.puckLineRec.toUpperCase()} +${betting.puckLineEdge.toFixed(1)}%`}
+                          {betting.puckLineRec === "pass" ? "Pass" : `${betting.puckLineRec.replace(/^home/, row.game.homeAbbr).replace(/^away/, row.game.awayAbbr).toUpperCase()} +${betting.puckLineEdge.toFixed(1)}%`}
                         </span>
                       </div>
                     </div>
@@ -338,13 +338,13 @@ export function AnalysisPanel({ linesRows, resultsStatus, resultsRunning }: Anal
                         <div>
                           <span style={{ color: "var(--text-2)" }}>ML: </span>
                           <span style={{ color: recColorDirect(betting.mlValueSide === "none" ? "pass" : "val", betting.mlValuePct) }}>
-                            {betting.mlValueSide === "none" ? "No edge" : `${betting.mlValueSide.toUpperCase()} +${betting.mlValuePct.toFixed(1)}%`}
+                            {betting.mlValueSide === "none" ? "No edge" : `${betting.mlValueSide === "home" ? row.game.homeAbbr : row.game.awayAbbr} +${betting.mlValuePct.toFixed(1)}%`}
                           </span>
                         </div>
                         <div>
                           <span style={{ color: "var(--text-2)" }}>PL: </span>
                           <span style={{ color: recColorDirect(betting.puckLineRec, betting.puckLineEdge) }}>
-                            {betting.puckLineRec === "pass" ? "No edge" : `${betting.puckLineRec.toUpperCase()} +${betting.puckLineEdge.toFixed(1)}%`}
+                            {betting.puckLineRec === "pass" ? "No edge" : `${betting.puckLineRec.replace(/^home/, row.game.homeAbbr).replace(/^away/, row.game.awayAbbr).toUpperCase()} +${betting.puckLineEdge.toFixed(1)}%`}
                           </span>
                         </div>
                         <div>
