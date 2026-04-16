@@ -285,12 +285,14 @@ export function parsePredictionCsv(text: string): PredictionRecord[] {
       awayWinProb: (parseNumber(row["Away Win %"]) ?? 0) / 100,
       homeEdgePct: parseNumber(row["Home ML Edge"]),
       awayEdgePct: parseNumber(row["Away ML Edge"]),
-      mlValueSide:
-        row["ML Value Side"] === "HOME ML"
-          ? "home"
-          : row["ML Value Side"] === "AWAY ML"
-            ? "away"
-            : "pass",
+      mlValueSide: (() => {
+        const val = row["ML Value Side"]?.toUpperCase() ?? "";
+        const homeAbbr = parseAbbr(row["Home"]);
+        const awayAbbr = parseAbbr(row["Away"]);
+        if (val === "HOME ML" || val === `${homeAbbr} ML`) return "home";
+        if (val === "AWAY ML" || val === `${awayAbbr} ML`) return "away";
+        return "pass";
+      })(),
       mlKellyPct: parseNumber(row["ML Kelly %"]),
       vegaHomeML: parseNumber(row["Vegas Home ML"]),
       vegaAwayML: parseNumber(row["Vegas Away ML"]),
@@ -307,13 +309,16 @@ export function parsePredictionCsv(text: string): PredictionRecord[] {
             ? "under"
             : "pass",
       ouEdge: normalizeOuEdgePct(parseNumber(row["O/U Edge"])),
-      puckLineRec:
-        row["Puck Line Rec"]?.toLowerCase() === "home -1.5" ||
-        row["Puck Line Rec"]?.toLowerCase() === "home +1.5" ||
-        row["Puck Line Rec"]?.toLowerCase() === "away -1.5" ||
-        row["Puck Line Rec"]?.toLowerCase() === "away +1.5"
-          ? (row["Puck Line Rec"].toLowerCase() as PredictionRecord["puckLineRec"])
-          : "pass",
+      puckLineRec: (() => {
+        const val = row["Puck Line Rec"]?.toLowerCase() ?? "";
+        const homeAbbr = parseAbbr(row["Home"]).toLowerCase();
+        const awayAbbr = parseAbbr(row["Away"]).toLowerCase();
+        if (val === "home -1.5" || val === `${homeAbbr} -1.5`) return "home -1.5";
+        if (val === "home +1.5" || val === `${homeAbbr} +1.5`) return "home +1.5";
+        if (val === "away -1.5" || val === `${awayAbbr} -1.5`) return "away -1.5";
+        if (val === "away +1.5" || val === `${awayAbbr} +1.5`) return "away +1.5";
+        return "pass";
+      })(),
       puckLineEdge: parseNumber(row["Puck Line Edge"]),
       mlBetUnits: parseNumber(row["ML Bet"]),
       ouBetUnits: parseNumber(row["O/U Bet"]),

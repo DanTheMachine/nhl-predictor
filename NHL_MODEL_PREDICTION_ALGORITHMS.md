@@ -77,26 +77,31 @@ These act as possession and chance-quality adjustments on top of baseline goals 
 
 Home expected goals:
 
-- `((home.gf + away.ga) / 2) * (1 + xgfDiff * 1.2 + cfDiff * 0.4) * iceAdj * playoffFactor * (1 + hB2BPenalty) + (home.ppPct - away.pkPct) * 0.004 * ppAdj`
+- `((home.gf + away.ga) / 2) * (1 + xgfDiff * 1.2 + cfDiff * 0.4) * iceAdj * playoffFactor * (1 + hB2BPenalty) + (home.ppPct - (100 - away.pkPct)) * 0.01 * ppAdj`
 
 Away expected goals:
 
-- `((away.gf + home.ga) / 2) * (1 - xgfDiff * 1.2 - cfDiff * 0.4) * iceAdj * playoffFactor * (1 + aB2BPenalty) + (away.ppPct - home.pkPct) * 0.004 * ppAdj`
+- `((away.gf + home.ga) / 2) * (1 - xgfDiff * 1.2 - cfDiff * 0.4) * iceAdj * playoffFactor * (1 + aB2BPenalty) + (away.ppPct - (100 - home.pkPct)) * 0.01 * ppAdj`
 
 Interpretation:
 
-- `gf` and `ga` provide the baseline scoring expectation
+- `gf` and `ga` are 5v5 per-60 style rates from the team data baseline; live ESPN stats replace these with actual goals-per-game when available
 - `xgfDiff` gets more weight than `cfDiff`
-- special teams contribute an additive adjustment through `ppPct - opponent pkPct`
+- special teams contribute an additive adjustment: `ppPct` is compared against `(100 - opponent.pkPct)`, which is the rate at which the opponent *allows* PP goals — a positive number means the team has a genuine PP advantage, near zero means it is average
 - playoffs and back-to-backs pull scoring down
 - rink effects push scoring up or down
 
-### 2.5 Goal floor and total
+### 2.5 Goal floor, calibration, and total
 
-Each side has a minimum goal floor:
+Each side has a minimum goal floor before calibration:
 
-- `hGoals = max(0.8, hExpGoals)`
-- `aGoals = max(0.8, aExpGoals)`
+- `hGoals = max(0.8, hExpGoals * totalScoringCalibration)`
+- `aGoals = max(0.8, aExpGoals * totalScoringCalibration)`
+
+The calibration constant differs by data source:
+
+- `ESTIMATED_TOTAL_SCORING_CALIBRATION = 1.45` — used when the baseline team data (5v5 per-60 rates) is the source; scales raw expected goals up to a realistic goals-per-game range (~5.5–6.5 total)
+- `LIVE_TOTAL_SCORING_CALIBRATION = 1.0` — used when live ESPN stats are present, because those values are already expressed as actual goals-per-game
 
 Then:
 
@@ -262,9 +267,11 @@ The Money Line comparison lives in `analyzeBetting(...)`.
 
 ### 9.2 Recommendation rule
 
-- bet `home` if `homeEdge > 2.0%`
-- bet `away` if `awayEdge > 2.0%`
+- bet `home` if `homeEdge > 7.0%` and Kelly threshold also met
+- bet `away` if `awayEdge > 7.0%` and Kelly threshold also met
 - otherwise `none`
+
+The display label uses the team abbreviation rather than `HOME`/`AWAY` (e.g. `TBL ML`).
 
 Displayed value:
 
@@ -309,22 +316,26 @@ Displayed value:
 
 ## 11. Total Bet Recommendation
 
-The model compares:
+The model uses a normal-distribution approach rather than a simple point-gap threshold.
 
-- `projectedTotal`
-- sportsbook `overUnder`
+### 11.1 Probability of going over
 
-### 11.1 Point-gap edge
+- `totalStdDev = 1.15`
+- `totalZ = (overUnder - projectedTotal) / totalStdDev`
+- `overProb = 1 - normCDF(totalZ)`
+- `underProb = 1 - overProb`
 
-- `ouEdge = projectedTotal - overUnder`
+### 11.2 Vig removal
 
-### 11.2 Recommendation rule
+Vegas over/under prices are converted to fair implied probabilities the same way as ML prices.
 
-- `over` if `ouEdge > 0.3`
-- `under` if `ouEdge < -0.3`
+### 11.3 Recommendation rule
+
+- `over` if `overProb - overImplied > 0.035`
+- `under` if `underProb - underImplied > 0.035`
 - `pass` otherwise
 
-This threshold is much tighter than the NCAAM model because the NHL total scale is lower.
+`ouEdge` is the raw probability difference (positive for over, negative for under).
 
 ## 12. Kelly Sizing
 
@@ -372,10 +383,10 @@ This example uses rounded values to explain the NHL flow. It is illustrative, no
 
 ### 14.1 Example inputs
 
-Home team:
+Home team (baseline 5v5 per-60 rates):
 
-- `gf = 3.20`
-- `ga = 2.70`
+- `gf = 2.44` (5v5 per-60 goals for rate)
+- `ga = 1.82` (5v5 per-60 goals against rate)
 - `cf = 52.0`
 - `xgf = 53.0`
 - `ppPct = 24.0`
@@ -384,10 +395,10 @@ Home team:
 - `pdo = 101.0`
 - `ice = standard`
 
-Away team:
+Away team (baseline 5v5 per-60 rates):
 
-- `gf = 2.80`
-- `ga = 3.00`
+- `gf = 2.20`
+- `ga = 1.96`
 - `cf = 48.0`
 - `xgf = 47.0`
 - `ppPct = 20.0`
@@ -431,13 +442,13 @@ Sportsbook terms:
 
 ### 14.3 Step 2: Estimate home goals
 
-Baseline scoring midpoint:
+Baseline scoring midpoint (5v5 per-60 rates):
 
-- `home_gf = 3.20`
-- `away_ga = 3.00`
+- `home_gf = 2.44`
+- `away_ga = 1.96`
 - `home_baseline = (home_gf + away_ga) / 2`
-- `(3.20 + 3.00) / 2`
-- `3.10`
+- `(2.44 + 1.96) / 2`
+- `2.20`
 
 Chance and possession multiplier:
 
@@ -448,41 +459,41 @@ Chance and possession multiplier:
 - `1 + 0.072 + 0.016`
 - `1.088`
 
-Special teams term:
+Special teams term (PP% vs opponent allowed PP rate):
 
 - `home_ppPct = 24.0`
 - `away_pkPct = 78.0`
-- `home_special_teams = (home_ppPct - away_pkPct) * 0.004`
-- `(24.0 - 78.0) * 0.004`
-- `-0.216`
+- `away_allowed_pp_rate = 100 - away_pkPct = 22.0`
+- `home_special_teams = (home_ppPct - away_allowed_pp_rate) * 0.01`
+- `(24.0 - 22.0) * 0.01`
+- `0.02`
 
-Expected home goals:
+Raw expected home goals before calibration:
 
-- `home_baseline = 3.10`
-- `home_multiplier = 1.088`
-- `home_special_teams = -0.216`
-- `home_expected_goals = home_baseline * home_multiplier + home_special_teams`
-- `3.10 * 1.088 + (-0.216)`
-- `3.3728 - 0.216`
-- `3.1568`
-- rounded result: `3.15`
+- `home_raw = home_baseline * home_multiplier + home_special_teams`
+- `2.20 * 1.088 + 0.02`
+- `2.394 + 0.02`
+- `2.414`
+
+Apply calibration constant (`ESTIMATED_TOTAL_SCORING_CALIBRATION = 1.45`):
+
+- `home_goals = max(0.8, 2.414 * 1.45)`
+- `max(0.8, 3.50)`
+- `3.50`
 
 ### 14.4 Step 3: Estimate away goals
 
 Baseline scoring midpoint:
 
-- `away_gf = 2.80`
-- `home_ga = 2.70`
+- `away_gf = 2.20`
+- `home_ga = 1.82`
 - `away_baseline = (away_gf + home_ga) / 2`
-- `(2.80 + 2.70) / 2`
-- `2.75`
+- `(2.20 + 1.82) / 2`
+- `2.01`
 
 Chance and possession multiplier:
 
-- `xgfDiff = 0.06`
-- `cfDiff = 0.04`
 - `away_multiplier = 1 - xgfDiff * 1.2 - cfDiff * 0.4`
-- `1 - 0.06 * 1.2 - 0.04 * 0.4`
 - `1 - 0.072 - 0.016`
 - `0.912`
 
@@ -490,38 +501,39 @@ Special teams term:
 
 - `away_ppPct = 20.0`
 - `home_pkPct = 81.0`
-- `away_special_teams = (away_ppPct - home_pkPct) * 0.004`
-- `(20.0 - 81.0) * 0.004`
-- `-0.244`
+- `home_allowed_pp_rate = 100 - home_pkPct = 19.0`
+- `away_special_teams = (away_ppPct - home_allowed_pp_rate) * 0.01`
+- `(20.0 - 19.0) * 0.01`
+- `0.01`
 
-Expected away goals:
+Raw expected away goals before calibration:
 
-- `away_baseline = 2.75`
-- `away_multiplier = 0.912`
-- `away_special_teams = -0.244`
-- `away_expected_goals = away_baseline * away_multiplier + away_special_teams`
-- `2.75 * 0.912 + (-0.244)`
-- `2.508 - 0.244`
-- `2.264`
-- rounded result: `2.27`
+- `away_raw = away_baseline * away_multiplier + away_special_teams`
+- `2.01 * 0.912 + 0.01`
+- `1.833 + 0.01`
+- `1.843`
+
+Apply calibration:
+
+- `away_goals = max(0.8, 1.843 * 1.45)`
+- `max(0.8, 2.67)`
+- `2.67`
 
 ### 14.5 Step 4: Total and projected margin
 
 Projected total:
 
-- `home_goals = 3.15`
-- `away_goals = 2.27`
+- `home_goals = 3.50`
+- `away_goals = 2.67`
 - `projectedTotal = home_goals + away_goals`
-- `3.15 + 2.27`
-- `5.42`
+- `3.50 + 2.67`
+- `6.17`
 
 Raw goal margin:
 
-- `home_goals = 3.15`
-- `away_goals = 2.27`
 - `raw_goal_margin = home_goals - away_goals`
-- `3.15 - 2.27`
-- `0.88`
+- `3.50 - 2.67`
+- `0.83`
 
 ### 14.6 Step 5: Goalie edge and win probability
 
@@ -536,25 +548,30 @@ Goalie edge:
 
 Net goal differential:
 
-- `raw_goal_margin = 0.88`
+- `raw_goal_margin = 0.83`
 - `goalieEdge = 0.18`
 - `hfa = 0.045`
 - `netGoalDiff = raw_goal_margin + goalieEdge + hfa`
-- `0.88 + 0.18 + 0.045`
-- `1.105`
+- `0.83 + 0.18 + 0.045`
+- `1.055`
 
 Win probability:
 
-- `netGoalDiff = 1.105`
+- `netGoalDiff = 1.055`
 - `logistic_factor = 1.62`
 - `homeWinProb_raw = 1 / (1 + exp(-netGoalDiff * logistic_factor))`
-- `1 / (1 + exp(-1.105 * 1.62))`
-- approximately `0.857`
+- `1 / (1 + exp(-1.055 * 1.62))`
+- approximately `0.843`
 
-Then the model bounds this at `0.82`, so:
+Then regress toward 50% with `WIN_PROB_REGRESSION = 0.6`:
 
-- `homeWinProb = 82.0%`
-- `awayWinProb = 18.0%`
+- `homeWinProb_regressed = 0.5 + (0.843 - 0.5) * 0.6`
+- approximately `0.706`
+
+Bounds applied (`min 0.22, max 0.78`):
+
+- `homeWinProb = 70.6%`
+- `awayWinProb = 29.4%`
 
 ### 14.7 Step 6: Compare to Money Line market
 
@@ -581,30 +598,30 @@ Vig-adjusted:
 
 Model edges:
 
-- `home_model_prob = 0.820`
-- `away_model_prob = 0.180`
+- `home_model_prob = 0.706`
+- `away_model_prob = 0.294`
 - `home_edge = home_model_prob - home_market_prob`
-- `0.820 - 0.580`
-- `0.240`
+- `0.706 - 0.580`
+- `0.126`
 - `away_edge = away_model_prob - away_market_prob`
-- `0.180 - 0.420`
-- `-0.240`
+- `0.294 - 0.420`
+- `-0.126`
 
 Decision:
 
-- home Money Line is positive by `24.0%`
-- threshold is `2.0%`
-- recommendation: `home ML`
+- home Money Line is positive by `12.6%`
+- threshold is `7.0%`
+- recommendation: `HOME ML` (displayed as the home team abbreviation, e.g. `TBL ML`)
 
 ### 14.8 Step 7: Compare to puck line
 
 Projected goal margin:
 
-- `home_goals = 3.15`
-- `away_goals = 2.27`
+- `home_goals = 3.50`
+- `away_goals = 2.67`
 - `projected_margin = home_goals - away_goals`
-- `3.15 - 2.27`
-- `0.88`
+- `3.50 - 2.67`
+- `0.83`
 
 With home `-1.5`:
 
@@ -618,22 +635,23 @@ If the resulting vig-adjusted edge exceeds `3.0%`, the puck line becomes a play.
 
 Projected total:
 
-- `projectedTotal = 5.42`
+- `projectedTotal = 6.17`
 
 Sportsbook total:
 
 - `sportsbook_total = 6.0`
 
-Edge:
+The model uses a normal-distribution approach with `totalStdDev = 1.15`:
 
-- `ouEdge = projectedTotal - sportsbook_total`
-- `5.42 - 6.0`
-- `-0.58`
+- `totalZ = (sportsbook_total - projectedTotal) / totalStdDev`
+- `(6.0 - 6.17) / 1.15`
+- `-0.148`
+- `overProb = 1 - normCDF(-0.148) ≈ 0.559`
+- `underProb ≈ 0.441`
 
-Decision:
+After vig removal, if `overProb - overImplied > 0.035`:
 
-- since `-0.58 < -0.3`
-- recommendation: `under 6.0`
+- recommendation: `over 6.0`
 
 ## 15. Summary Of Decision Rules
 
@@ -661,10 +679,13 @@ Decision:
 
 - This is a lightweight handcrafted model, not a trained machine-learning model.
 - Projected goals come from blended team scoring rates plus possession and special-team modifiers.
-- Win probability is logistic, not Poisson.
+- The hardcoded `gf`/`ga` values in `data.ts` are 5v5 per-60 style rates (~1.6–2.7), not actual goals-per-game. A calibration factor of `1.45` scales them to realistic game totals. Live ESPN stats bypass this scaling because they are already expressed as goals-per-game.
+- Win probability is logistic with regression toward 50%, not Poisson.
 - Puck line probability uses a simplified normal-style scoring margin assumption with fixed `stdDev = 1.65`.
+- O/U recommendation uses a normal-distribution probability comparison against vig-adjusted implied probabilities, not a raw point-gap threshold.
 - Live API data and goalie overrides can materially change outputs versus the hardcoded baselines.
-- The model caps home win probability between `18%` and `82%`, so extreme mismatches are intentionally compressed.
+- The model caps home win probability between `22%` and `78%` after regression, so extreme mismatches are intentionally compressed.
+- Bet recommendation display labels use team abbreviations (e.g. `COL ML`, `COL -1.5`) rather than `HOME`/`AWAY`. The evaluation CSV parser handles both the old and new formats for backwards compatibility.
 
 ## 17. Definitions
 
@@ -766,27 +787,27 @@ Quick interpretation:
 
 ### `gf`
 
-Goals scored per game.
+Goals for rate. In the hardcoded team baseline this is a 5v5 per-60 style rate (typically `1.6`–`2.7`). When live ESPN stats are loaded, this is replaced with the team's actual goals-per-game average for the season. The engine multiplies the baseline value by `ESTIMATED_TOTAL_SCORING_CALIBRATION = 1.45` to scale it to a realistic per-game range.
 
-Quick interpretation:
+Quick interpretation of the baseline value:
 
-- below `2.5`: poor offense
-- `2.5` to `2.9`: below average
-- `2.9` to `3.2`: average
-- `3.2` to `3.5`: good
-- above `3.5`: elite offense
+- below `1.8`: poor offense at 5v5
+- `1.8` to `2.1`: below average
+- `2.1` to `2.4`: average
+- `2.4` to `2.7`: good
+- above `2.7`: elite offense at 5v5
 
 ### `ga`
 
-Goals allowed per game. Lower is better.
+Goals against rate. Same scaling as `gf` — baseline is a 5v5 per-60 rate; live stats replace it with actual goals-against-per-game. Lower is better.
 
-Quick interpretation:
+Quick interpretation of the baseline value:
 
-- above `3.5`: poor defense
-- `3.1` to `3.5`: below average
-- `2.8` to `3.1`: average
-- `2.5` to `2.8`: good
-- below `2.5`: elite defense
+- above `2.4`: poor defense at 5v5
+- `2.1` to `2.4`: below average
+- `1.9` to `2.1`: average
+- `1.7` to `1.9`: good
+- below `1.7`: elite defense at 5v5
 
 ### `srs`
 

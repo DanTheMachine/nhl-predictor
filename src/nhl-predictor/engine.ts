@@ -7,8 +7,8 @@ import type {
   TeamData,
 } from "../nhl-core/types";
 
-const ESTIMATED_TOTAL_SCORING_CALIBRATION = 1.3;
-const LIVE_TOTAL_SCORING_CALIBRATION = 1.08;
+const ESTIMATED_TOTAL_SCORING_CALIBRATION = 1.45;
+const LIVE_TOTAL_SCORING_CALIBRATION = 1.0;
 const ML_EDGE_THRESHOLD = 0.07;
 const ML_KELLY_THRESHOLD = 0.04;
 const WIN_PROB_REGRESSION = 0.6;
@@ -51,11 +51,11 @@ export function predictGame({
 
   const hExpGoals =
     ((h.gf + a.ga) / 2) * (1 + xgfDiff * 1.2 + cfDiff * 0.4) * iceAdj * playoffFactor * (1 + hB2BPenalty) +
-    (h.ppPct - a.pkPct) * 0.004 * ppAdj;
+    (h.ppPct - (100 - a.pkPct)) * 0.01 * ppAdj;
 
   const aExpGoals =
     ((a.gf + h.ga) / 2) * (1 - xgfDiff * 1.2 - cfDiff * 0.4) * iceAdj * playoffFactor * (1 + aB2BPenalty) +
-    (a.ppPct - h.pkPct) * 0.004 * ppAdj;
+    (a.ppPct - (100 - h.pkPct)) * 0.01 * ppAdj;
 
   const hGoals = Math.max(0.8, hExpGoals * totalScoringCalibration);
   const aGoals = Math.max(0.8, aExpGoals * totalScoringCalibration);

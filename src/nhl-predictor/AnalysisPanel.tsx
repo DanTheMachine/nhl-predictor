@@ -430,7 +430,7 @@ export function AnalysisPanel({ linesRows, resultsStatus, resultsRunning }: Anal
                   }}>
                     {bet.betType} — {bet.side}
                   </span>
-                  <span style={{ fontSize: 10, color: bet.betType === "O/U" ? "var(--green)" : "var(--text-2)", fontWeight: bet.betType === "O/U" ? 700 : 400 }}>
+                  <span style={{ fontSize: 10, color: bet.betType === "O/U" ? edgeColorDirect(bet.edgePct, bet.betType) : "var(--text-2)", fontWeight: bet.betType === "O/U" ? 700 : 400 }}>
                     {" "}· {bet.gameLabel} · {bet.gameTime}
                   </span>
                 </div>
