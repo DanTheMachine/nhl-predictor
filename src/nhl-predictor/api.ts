@@ -50,7 +50,7 @@ export async function fetchLiveTeamStats(onStatus: (msg: string) => void): Promi
     if (!abbr || !TEAMS[abbr] || !team.id) continue;
 
     try {
-      const statsUrl = `https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/teams/${team.id}/statistics`;
+      const statsUrl = `https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/teams/${team.id}/statistics?seasontype=2`;
       const statsRes = await fetch(`${PROXY}${encodeURIComponent(statsUrl)}`);
       if (!statsRes.ok) continue;
       const statsData = await statsRes.json();
@@ -66,7 +66,7 @@ export async function fetchLiveTeamStats(onStatus: (msg: string) => void): Promi
         return null;
       };
 
-      const gamesPlayed = getStat("games") ?? 1;
+      const gamesPlayed = Math.max(1, getStat("games") ?? 1);
       const goalsForTotal = getStat("goals");
       const goalsAgainstTotal = getStat("goalsAgainst");
       const savePct = getStat("savePct");
@@ -74,18 +74,14 @@ export async function fetchLiveTeamStats(onStatus: (msg: string) => void): Promi
       const base = TEAMS[abbr];
       const savePctFinal = savePct !== null ? (savePct > 1 ? savePct / 100 : savePct) : base.goalieSV;
       const shootingPctFinal = shootingPct !== null ? shootingPct : base.shootingPct;
-      const goalsForPerGame = goalsForTotal !== null ? goalsForTotal / gamesPlayed : base.gf;
-      const goalsAgainstPerGame = goalsAgainstTotal !== null ? goalsAgainstTotal / gamesPlayed : base.ga;
+      const gfLive = goalsForTotal !== null && gamesPlayed >= 10 ? goalsForTotal / gamesPlayed : null;
+      const gaLive = goalsAgainstTotal !== null && gamesPlayed >= 10 ? goalsAgainstTotal / gamesPlayed : null;
+      const goalsForPerGame = gfLive !== null && gfLive >= 0.8 && gfLive <= 5.0 ? gfLive : base.gf;
+      const goalsAgainstPerGame = gaLive !== null && gaLive >= 0.8 && gaLive <= 5.0 ? gaLive : base.ga;
       const pdo = shootingPctFinal + savePctFinal * 100;
-      const goalsForShare = (goalsForPerGame / (goalsForPerGame + goalsAgainstPerGame)) * 100;
-      const regressionWeight = Math.min(gamesPlayed / 60, 1);
-      const corsiProxy = goalsForShare * regressionWeight + 50 * (1 - regressionWeight);
       const simpleRating = goalsForPerGame - goalsAgainstPerGame;
 
       result[abbr] = {
-        cf: +corsiProxy.toFixed(1),
-        ff: +corsiProxy.toFixed(1),
-        xgf: +corsiProxy.toFixed(1),
         pdo: +pdo.toFixed(1),
         goalieSV: +savePctFinal.toFixed(4),
         shootingPct: +shootingPctFinal.toFixed(1),

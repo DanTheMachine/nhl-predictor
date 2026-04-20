@@ -56,6 +56,28 @@ describe('predictGame', () => {
     expect(Number(playoff.total)).toBeLessThan(Number(regularSeason.total))
   })
 
+  it('clamps extreme cf/xgf values so goals stay within a sane range', () => {
+    // Simulates corrupt liveStats where cf/xgf arrive as decimal fractions (0.6 instead of 60)
+    // or as raw shot counts (600). Without clampPct these would blow up the multiplier.
+    const result = predictGame({
+      homeTeam: 'CAR',
+      awayTeam: 'OTT',
+      gameType: 'Regular Season',
+      homeB2B: false,
+      awayB2B: false,
+      liveStats: {
+        CAR: { cf: 0.6, ff: 0.6, xgf: 0.6, pdo: 98, goalieSV: 0.895, shootingPct: 9, ppPct: 22.6, pkPct: 80, gf: 2.18, ga: 1.97, srs: 0.4, gp: 82, lastUpdated: '' },
+        OTT: { cf: 600, ff: 600, xgf: 600, pdo: 99, goalieSV: 0.893, shootingPct: 10, ppPct: 23.7, pkPct: 72.4, gf: 2.22, ga: 2.01, srs: 0.2, gp: 82, lastUpdated: '' },
+      },
+    })
+
+    // The clamp prevents unbounded output; the 0.80 floor is the final safety net
+    expect(Number(result.hGoals)).toBeGreaterThanOrEqual(0.8)
+    expect(Number(result.hGoals)).toBeLessThan(6)
+    expect(Number(result.aGoals)).toBeGreaterThanOrEqual(0.8)
+    expect(Number(result.aGoals)).toBeLessThan(6)
+  })
+
   it('applies live stats and goalie overrides', () => {
     const baseline = predictGame({
       homeTeam: 'BOS',

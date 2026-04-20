@@ -35,9 +35,9 @@ export interface GoalieInfo {
 }
 
 export interface LiveTeamStats {
-  cf: number;
-  ff: number;
-  xgf: number;
+  cf?: number;
+  ff?: number;
+  xgf?: number;
   pdo: number;
   goalieSV: number;
   shootingPct: number;
