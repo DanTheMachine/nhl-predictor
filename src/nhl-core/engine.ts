@@ -40,8 +40,9 @@ export function predictGame({
 
   const iceAdj = ICE_CONDITIONS[h.ice]?.scoringAdj ?? 1.0;
   const ppAdj = ICE_CONDITIONS[h.ice]?.ppAdj ?? 1.0;
-  const cfDiff = (h.cf - a.cf) / 100;
-  const xgfDiff = (h.xgf - a.xgf) / 100;
+  const clampPct = (v: number) => Math.min(Math.max(v, 30), 75);
+  const cfDiff = (clampPct(h.cf) - clampPct(a.cf)) / 100;
+  const xgfDiff = (clampPct(h.xgf) - clampPct(a.xgf)) / 100;
 
   const hExpGoals =
     ((h.gf + a.ga) / 2) * (1 + xgfDiff * 1.2 + cfDiff * 0.4) * iceAdj * playoffFactor * (1 + hB2BPenalty) +

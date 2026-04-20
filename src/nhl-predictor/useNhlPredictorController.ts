@@ -307,9 +307,14 @@ export function useNhlPredictorController() {
       const parse = (colIndex: number) =>
         colIndex >= 0 && dataCols[colIndex] ? parseFloat(dataCols[colIndex]) || null : null;
 
-      const cf = parse(iCF);
-      const ff = parse(iFF);
-      const xgf = parse(iXGF);
+      const cfRaw = parse(iCF);
+      const ffRaw = parse(iFF);
+      const xgfRaw = parse(iXGF);
+      // NST exports percentages like 59.8; guard against decimal form (0.598)
+      const normPct = (v: number | null) => (v !== null ? (v < 5 ? +(v * 100).toFixed(1) : +v.toFixed(1)) : null);
+      const cf = normPct(cfRaw);
+      const ff = normPct(ffRaw);
+      const xgf = normPct(xgfRaw);
       const sv = parse(iSV);
       const pdo = parse(iPDO);
       const pp = parse(iPP);
