@@ -31,9 +31,11 @@ Important files:
 - `src/nhl-predictor/EvaluationPanel.tsx`
 - `src/nhl-predictor/evaluation.ts`
 - `src/nhl-predictor/export.ts`
+- `src/nhl-predictor/engine.ts` (production prediction engine)
+- `src/nhl-predictor/api.ts` (ESPN/NHL API fetch)
 - `src/nhl-core/data.ts`
 - `src/nhl-core/types.ts`
-- `src/nhl-core/engine.ts`
+- `src/nhl-core/engine.ts` (legacy/shared engine used by core tests)
 - `.github/workflows/ci.yml`
 - `playwright.config.ts`
 - `RUNNING_THE_MODEL.md`
@@ -58,11 +60,14 @@ Major work completed:
 2. Testing
 - Added Vitest unit and component tests.
 - Added Playwright E2E tests.
-- Most recent focused passing status for the latest changes:
-  - `npm run test -- --run src\nhl-predictor\AnalysisPanel.test.tsx src\nhl-predictor\goalieSelection.test.ts src\nhl-core\engine.test.ts`
-- New focused tests added recently:
+- Current status: **99 tests passing across 11 files**.
+- Test files:
+  - `src/nhl-core/engine.test.ts` — legacy engine, ice conditions, PDO labels, clampPct
+  - `src/nhl-predictor/engine.test.ts` — production engine (full coverage added in April 2026)
   - `src/nhl-predictor/AnalysisPanel.test.tsx`
   - `src/nhl-predictor/goalieSelection.test.ts`
+  - `src/nhl-predictor/evaluation.test.ts`
+  - `src/nhl-predictor/export.test.ts`
 
 3. Model evaluation / backtesting first pass
 - Added in-app `MODEL EVALUATION` section via `EvaluationPanel.tsx`.
@@ -147,6 +152,14 @@ Major work completed:
   - O/U: `MED` at `4%`, `STRONG` at `8%`
 - This was tuned iteratively to reduce overclassification of ML bets as `STRONG` on large slates while keeping ML medium strength slightly looser than the first conservative pass.
 
+8. Playoff stats contamination fix and input guards (April 2026)
+- **Root cause**: ESPN's `statistics` endpoint returns current-season stats. Once the 2026 playoffs began (April 20), it returned only 1–2 playoff games per team instead of the full regular-season baseline. A single shutout (OTT 0-2) produced gf=0.0; a blowout win (DAL 6-1) produced gf=6.0. These replaced the full-season baseline and skewed projections to extremes like `2.06–0.80` and `1.06–6.17`.
+- **Fix**: Added `?seasontype=2` to the ESPN team statistics URL to force regular-season data year-round.
+- **gf/ga guard**: Live gf/ga values are now only accepted if `gamesPlayed >= 10` and the per-game rate is within `[0.8, 5.0]`. Outside those bounds the baseline value is used. Protects against early-season noise and future API anomalies.
+- **ESPN Corsi removed**: ESPN has no Corsi data. The previous `corsiProxy` (a goals-for-share estimate) was removed from the live fetch. `cf`/`ff`/`xgf` are no longer included in the ESPN result and are now optional fields in `LiveTeamStats`. Baseline values from NST are preserved.
+- **`clampPct`**: Added to both `src/nhl-predictor/engine.ts` and `src/nhl-core/engine.ts`. Bounds `cf`/`xgf` to `[30, 75]%` before computing the goal multiplier. Prevents corrupt values (decimal fractions like `0.6`, raw counts like `600`) from producing nonsensical projections.
+- **NST decimal guard**: `normPct` added to the NST paste parser in `useNhlPredictorController.ts`. Detects decimal-form CF% (value `< 5`) and multiplies by 100 before storing.
+
 Important fixes made recently:
 - Refreshed seeded default team stats in `src/nhl-core/data.ts` to 2026 values as of `3/30/26`:
   - updated seeded `cf`, `ff`, `xgf`, `goalieSV`, `shootingPct`, and `pdo` for all 32 teams from the latest pasted advanced-stats import
@@ -191,7 +204,11 @@ Docs updated:
 
 Current state:
 - Project is on GitHub
-- GitHub Actions is set up and passing
+- GitHub Actions is set up and passing (99 tests, TypeScript build clean)
+- Production engine (`src/nhl-predictor/engine.ts`) now has full dedicated test coverage
+- ESPN live stats reliably use full regular-season data even during playoffs (`?seasontype=2`)
+- Both engines guard against corrupt cf/xgf inputs via `clampPct([30, 75])`
+- `cf`/`ff`/`xgf` are optional in `LiveTeamStats`; ESPN fetch no longer overwrites them (no Corsi data available from ESPN)
 - Evaluation workflow exists in-app
 - Evaluation import is more forgiving than the initial implementation:
   - clean CSV exports still work

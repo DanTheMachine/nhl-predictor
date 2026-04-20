@@ -68,8 +68,10 @@ This lets the model slightly raise or lower scoring based on rink environment.
 
 The model uses two core matchup differentials:
 
-- `cfDiff = (home.cf - away.cf) / 100`
-- `xgfDiff = (home.xgf - away.xgf) / 100`
+- `cfDiff = (clampPct(home.cf) - clampPct(away.cf)) / 100`
+- `xgfDiff = (clampPct(home.xgf) - clampPct(away.xgf)) / 100`
+
+`clampPct` bounds each value to `[30, 75]%` before the division. This prevents corrupt or out-of-range inputs — such as decimal-form fractions (`0.6` instead of `60`) or raw shot counts (`600`) — from blowing up the multiplier.
 
 These act as possession and chance-quality adjustments on top of baseline goals for and against.
 
@@ -135,8 +137,8 @@ The model uses a logistic transform:
 
 Then it bounds the result:
 
-- minimum `18%`
-- maximum `82%`
+- minimum `22%`
+- maximum `78%`
 
 Away win probability is:
 
@@ -186,18 +188,20 @@ The model can replace baseline team stats before projecting.
 
 ### 6.1 Live stats
 
-`fetchLiveTeamStats(...)` can overwrite defaults using API-fetched values for:
+`fetchLiveTeamStats(...)` overwrites defaults using ESPN-fetched values for:
 
-- `cf`
-- `xgf`
 - `pdo`
 - `goalieSV`
 - `shootingPct`
 - `ppPct`
 - `pkPct`
-- `gf`
-- `ga`
+- `gf` (accepted only if `gamesPlayed >= 10` and value is within `[0.8, 5.0]`; otherwise baseline is kept)
+- `ga` (same guard as `gf`)
 - `srs`
+
+**`cf`, `ff`, and `xgf` are not overwritten by the ESPN fetch** — ESPN provides no Corsi or expected-goals data. These fields remain at their baseline (or NST-pasted) values. They are optional in `LiveTeamStats`.
+
+The ESPN statistics URL includes `?seasontype=2` to force regular-season data year-round. Without this, the endpoint returns only current-postseason stats once the playoffs begin, producing per-game rates from 1–2 games that wildly skew projections.
 
 If live stats exist for a team:
 
@@ -568,7 +572,7 @@ Then regress toward 50% with `WIN_PROB_REGRESSION = 0.6`:
 - `homeWinProb_regressed = 0.5 + (0.843 - 0.5) * 0.6`
 - approximately `0.706`
 
-Bounds applied (`min 0.22, max 0.78`):
+Bounds applied (`min 22%, max 78%`):
 
 - `homeWinProb = 70.6%`
 - `awayWinProb = 29.4%`
@@ -660,7 +664,7 @@ After vig removal, if `overProb - overImplied > 0.035`:
 - Project goals for each side
 - Convert goal differential plus goalie edge into home win probability
 - Remove vig from sportsbook Money Line
-- Bet side only if model edge exceeds `2.0%`
+- Bet side only if model edge exceeds `7.0%` and fractional Kelly threshold also met
 
 ### Puck Line
 
@@ -672,8 +676,8 @@ After vig removal, if `overProb - overImplied > 0.035`:
 ### Total
 
 - Project total from goals-for, goals-against, xGF%, CF%, special teams, rink, and schedule context
-- Compare projected total to sportsbook O/U
-- Recommend over/under only if the gap exceeds `0.3` goals
+- Compare projected total to sportsbook O/U using a normal-distribution probability gap
+- Recommend over/under only if vig-adjusted edge exceeds `3.5%`
 
 ## 16. Important Notes
 
