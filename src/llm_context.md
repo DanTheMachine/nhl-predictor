@@ -8,8 +8,11 @@ Current stack:
 - TypeScript
 - Vite
 - Vitest
-- Playwright
+- Playwright (E2E browser tests + server-side odds capture)
 - GitHub Actions
+- PostgreSQL via Prisma 6 (shared DB with mlb-predictor / nba-predictor)
+- Express (REST API layer)
+- tsx (TypeScript CLI runner)
 
 Current architecture:
 - `src/nhl-core`
@@ -18,9 +21,21 @@ Current architecture:
 - `src/nhl-predictor`
   - app feature layer
   - panels, controller hook, API fetch logic, export logic, evaluation logic
+  - `bulkOddsParser.ts` — server-side sportsbook text parser (also importable by browser)
 - `src/nhl-predictor.tsx`
   - app composition entry for the predictor UI
-  - now also controls the top-level predictor vs evaluation tab view
+  - controls the top-level predictor vs evaluation tab view
+- `server/`
+  - `config.ts` — all env-var config (DB, ports, odds capture)
+  - `db/client.ts` — Prisma singleton
+  - `db/repositories.ts` — all NHL Prisma queries
+  - `services/nhl/nhlAutomation.ts` — pipeline orchestration (slate → predict → persist → export)
+  - `services/nhl/oddsCapture.ts` — Playwright sportsbook scraper
+  - `services/nhl/oddsOverrides.ts` — staged override workflow (import → approve/reject)
+  - `services/nhl/nhlCsv.ts` — server-side CSV builders
+- `prisma/schema.prisma` — superset schema (all MLB + NBA + NHL tables; must stay complete)
+- `cli.ts` — CLI entry point (tsx runner)
+- `api.ts` — Express REST API entry point
 
 Important files:
 - `src/nhl-predictor.tsx`
@@ -31,16 +46,38 @@ Important files:
 - `src/nhl-predictor/EvaluationPanel.tsx`
 - `src/nhl-predictor/evaluation.ts`
 - `src/nhl-predictor/export.ts`
+- `src/nhl-predictor/bulkOddsParser.ts`
 - `src/nhl-predictor/engine.ts` (production prediction engine)
 - `src/nhl-predictor/api.ts` (ESPN/NHL API fetch)
 - `src/nhl-core/data.ts`
 - `src/nhl-core/types.ts`
 - `src/nhl-core/engine.ts` (legacy/shared engine used by core tests)
+- `server/config.ts`
+- `server/db/repositories.ts`
+- `server/services/nhl/nhlAutomation.ts`
+- `server/services/nhl/oddsCapture.ts`
+- `server/services/nhl/oddsOverrides.ts`
+- `prisma/schema.prisma`
+- `cli.ts`
+- `api.ts`
 - `.github/workflows/ci.yml`
 - `playwright.config.ts`
 - `RUNNING_THE_MODEL.md`
 
 Major work completed:
+
+9. Multi-sport DB pipeline + odds capture (April 2026)
+- Added a full server-side Node.js pipeline alongside the existing browser UI.
+- Shared PostgreSQL database (same `DATABASE_URL` as mlb-predictor / nba-predictor).
+- New tables: `NhlTeamStatSnapshot`, `NhlSlateGame`, `NhlMarketOddsSnapshot`, `NhlPrediction`, `NhlGameResult`.
+- Shared `OddsOverride` table (filtered by `sport = 'NHL'`) stores staged/approved sportsbook odds captured via Playwright.
+- `prisma/schema.prisma` is a **superset** schema — includes all MLB and NBA tables so `prisma db push` from this project never drops the other sports' data.
+- CLI: `npx tsx cli.ts nhl:<command>` — 14 commands covering slate loading, predictions, results ingestion, CSV export, evaluation, and the full odds-capture workflow.
+- Playwright scraper (`oddsCapture.ts`) logs into the sportsbook, navigates to the NHL odds page via a configurable nav selector, extracts odds text, parses it, and saves staged rows.
+- Odds selector fix: betlotus sportsbook uses `#uSportListUL` (not `#top-category`) and text `Hockey - NHL - Games`. Correct nav selector: `//ul[@id='uSportListUL']//a[contains(normalize-space(text()),'Hockey - NHL - Games')]`.
+- `parseBulkOdds` in `bulkOddsParser.ts`: two parse modes (line-block for multiline, inline for continuous text). 3-digit rotation numbers are skipped; 2-digit rotation numbers (betlotus) shift token slots so odds fall back to defaults — team matching is still correct.
+- Debug artifacts (`-raw.txt`, `-parsed.json`, `-meta.txt`) written on both success and failure to `{NHL_EXPORT_DIR}/odds-capture-debug/`.
+- Staged override two-step flow: `nhl:capture-odds-overrides` → `nhl:list-odds-overrides` → `nhl:approve-odds-overrides`.
 
 1. Architecture cleanup
 - Broke the old monolithic predictor UI into focused modules:
@@ -60,7 +97,7 @@ Major work completed:
 2. Testing
 - Added Vitest unit and component tests.
 - Added Playwright E2E tests.
-- Current status: **99 tests passing across 11 files**.
+- Current status: **112 tests passing across 12 files**.
 - Test files:
   - `src/nhl-core/engine.test.ts` — legacy engine, ice conditions, PDO labels, clampPct
   - `src/nhl-predictor/engine.test.ts` — production engine (full coverage added in April 2026)
@@ -68,6 +105,7 @@ Major work completed:
   - `src/nhl-predictor/goalieSelection.test.ts`
   - `src/nhl-predictor/evaluation.test.ts`
   - `src/nhl-predictor/export.test.ts`
+  - `src/nhl-predictor/bulkOddsParser.test.ts` — `parseBulkOdds`: line-block mode, inline mode, team name aliases, 2-digit rotation, period-line filtering, defaults
 
 3. Model evaluation / backtesting first pass
 - Added in-app `MODEL EVALUATION` section via `EvaluationPanel.tsx`.
@@ -204,7 +242,7 @@ Docs updated:
 
 Current state:
 - Project is on GitHub
-- GitHub Actions is set up and passing (99 tests, TypeScript build clean)
+- GitHub Actions is set up and passing (112 tests, TypeScript build clean)
 - Production engine (`src/nhl-predictor/engine.ts`) now has full dedicated test coverage
 - ESPN live stats reliably use full regular-season data even during playoffs (`?seasontype=2`)
 - Both engines guard against corrupt cf/xgf inputs via `clampPct([30, 75])`
@@ -223,6 +261,9 @@ Current state:
 - Loaded goalie rosters now directly influence the daily slate workflow through estimated overrides
 - B2B teams can automatically switch to the second-most-started goalie
 - Best Bets strength labels are now less aggressive for ML than they were previously
+- Server-side Node.js pipeline is fully implemented: slate → predict → persist → export via CLI
+- Playwright odds capture working against betlotus sportsbook (nav selector: `#uSportListUL`)
+- `mlValueSide` and `puckLineRec` in `buildExportRow` use team abbreviations (e.g. `COL ML`, `COL -1.5`); evaluation parser accepts both old `HOME ML` format and new abbreviation format
 
 Known follow-up priorities discussed:
 1. Cleaner data boundary / typed adapters
