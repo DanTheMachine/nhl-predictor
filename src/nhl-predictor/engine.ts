@@ -39,7 +39,7 @@ export function predictGame({
   if (awaySVOverride != null) a.goalieSV = awaySVOverride;
 
   const isPlayoff = gameType !== "Regular Season";
-  const playoffFactor = isPlayoff ? 0.94 : 1.0;
+  const playoffFactor = isPlayoff ? 0.86 : 1.0;
   const hfa = 0.045;
   const hB2BPenalty = homeB2B ? -0.018 : 0;
   const aB2BPenalty = awayB2B ? -0.018 : 0;
