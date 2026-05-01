@@ -79,6 +79,7 @@ See [NHL_MODEL_PREDICTION_ALGORITHMS.md](NHL_MODEL_PREDICTION_ALGORITHMS.md) for
 
 - **`gf`/`ga` in `data.ts` are 5v5 per-60 rates (~1.6–2.7), not goals-per-game.** The engine multiplies by `ESTIMATED_TOTAL_SCORING_CALIBRATION = 1.45` to scale them. Live ESPN stats are already goals-per-game, so they use `LIVE_TOTAL_SCORING_CALIBRATION = 1.0`.
 - **ESPN live stats use `?seasontype=2`** to force regular-season data year-round. Without this, the endpoint switches to playoff-only stats once the postseason begins, producing wildly skewed per-game averages from 1–2 games.
+- **`playoffFactor = 0.86`**: playoff games apply a 14% scoring reduction to `hExpGoals`/`aExpGoals`. This accounts for the gap between regular-season ESPN rates (used year-round via `?seasontype=2`) and actual playoff scoring. A 6% factor (0.94) was too small — the model systematically over-projected playoff totals vs sportsbook lines that correctly price in lower scoring.
 - **ESPN gf/ga guard**: live gf/ga are only accepted if `gamesPlayed >= 10` and the per-game rate is within `[0.8, 5.0]`; otherwise the baseline value is used.
 - **`clampPct`**: both engines clamp `cf`/`xgf` to `[30, 75]%` before computing the multiplier, preventing corrupt or out-of-range values (e.g. decimal-form `0.6` or raw count `600`) from blowing up projections.
 - **NST paste normalization**: `normPct` in the paste parser detects decimal-form CF% (value `< 5`) and multiplies by 100 before storing.
