@@ -123,7 +123,7 @@ const GAME_TIME_REGEX = /([1-9]|1[0-2]):\d{2}\s*(?:AM|PM)/i
 const normalizeFractionGlyphs = (value: string): string =>
   value
     .trim()
-    .replace(/[   ]/g, ' ')
+    .replace(/[\u00a0\u2007\u202f]/g, ' ')
     .replace(/\s*ÃƒÆ'Ã¢â‚¬Å¡?Ãƒâ€šÃ‚Â½/g, '.5')
     .replace(/\s*ÃƒÆ'Ã¢â‚¬Å¡?Ãƒâ€šÃ‚Â¼/g, '.25')
     .replace(/\s*ÃƒÆ'Ã¢â‚¬Å¡?Ãƒâ€šÃ‚Â¾/g, '.75')
