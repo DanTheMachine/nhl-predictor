@@ -436,7 +436,66 @@ What the E2E suite currently covers:
 - Playwright starts the Vite dev server automatically through `playwright.config.ts`
 - the proxy is not required for the current local E2E tests because they focus on the app's manual and simulated workflows
 
-## 12. Useful Commands
+## 12. Server-Side CLI Pipeline
+
+The project includes a Node.js pipeline (`cli.ts`) that runs the same prediction model headlessly, persists results to PostgreSQL, and captures sportsbook odds via Playwright. All commands use `npx tsx cli.ts <command>`.
+
+Requires a `.env` file with `DATABASE_URL` set to the shared PostgreSQL connection string (same DB used by mlb-predictor and nba-predictor).
+
+### 12.1 Daily pipeline
+
+```bash
+# Load today's slate and generate predictions (saved to DB)
+npx tsx cli.ts nhl:run-daily-pipeline --date 2026-04-30
+
+# Or run the steps individually:
+npx tsx cli.ts nhl:load-slate         --date 2026-04-30
+npx tsx cli.ts nhl:run-predictions    --date 2026-04-30
+
+# Next day: ingest final scores
+npx tsx cli.ts nhl:ingest-results     --date 2026-04-30
+
+# Export CSVs to NHL_EXPORT_DIR (default ./generated/nhl)
+npx tsx cli.ts nhl:export-predictions-csv --date 2026-04-30
+npx tsx cli.ts nhl:export-results-csv     --date 2026-04-30
+
+# Evaluate a date range
+npx tsx cli.ts nhl:evaluate --from 2026-04-01 --to 2026-04-30
+```
+
+### 12.2 Odds capture workflow
+
+Captures live sportsbook lines via Playwright and stores them as staged overrides. Requires `ODDS_CAPTURE_*` env vars (see `.env.example`).
+
+```bash
+# 1. Capture odds from sportsbook (opens browser, logs in, scrapes NHL page)
+npx tsx cli.ts nhl:capture-odds-overrides --date 2026-04-30 --source betlotus-nhl
+
+# 2. Inspect what was captured
+npx tsx cli.ts nhl:list-odds-overrides --date 2026-04-30
+
+# 3. Approve (predictions will now use these odds)
+npx tsx cli.ts nhl:approve-odds-overrides --date 2026-04-30 --source betlotus-nhl
+
+# Or reject bad/stale data
+npx tsx cli.ts nhl:reject-odds-overrides --date 2026-04-30 --source betlotus-nhl
+```
+
+If capture fails, debug artifacts (HTML snapshot, screenshot, error log) are written to `{NHL_EXPORT_DIR}/odds-capture-debug/`. Successful captures also write raw text and parsed JSON there for auditing.
+
+**betlotus nav selector:** `//ul[@id='uSportListUL']//a[contains(normalize-space(text()),'Hockey - NHL - Games')]`
+
+### 12.3 Database setup
+
+```bash
+# Apply the Prisma schema to the shared DB (creates NHL tables only; won't drop MLB/NBA tables)
+npm run prisma:push
+
+# Regenerate the Prisma client after schema changes
+npm run prisma:generate
+```
+
+## 14. Useful Commands
 
 Start proxy:
 
@@ -474,7 +533,7 @@ Run Playwright E2E:
 npm run test:e2e
 ```
 
-## 13. Key Files
+## 15. Key Files
 
 - [nhl-predictor.tsx](C:\projects\game_sims\nhl-predictor\src\nhl-predictor.tsx)
 - [proxy.cjs](C:\projects\game_sims\nhl-predictor\proxy.cjs)

@@ -13,14 +13,26 @@
     "test:coverage": "vitest run --coverage --pool threads",
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
-    "test:e2e:install": "playwright install chromium"
+    "test:e2e:install": "playwright install chromium",
+    "cli": "tsx cli.ts",
+    "api": "tsx api.ts",
+    "prisma:generate": "prisma generate",
+    "prisma:push": "prisma db push",
+    "prisma:migrate:dev": "prisma migrate dev"
   },
   "dependencies": {
+    "@playwright/test": "^1.55.0",
+    "@prisma/client": "^6.19.3",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
+    "@types/express": "^5.0.3",
+    "prisma": "^6.19.3",
+    "tsx": "^4.20.6",
     "@playwright/test": "^1.55.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.0",
