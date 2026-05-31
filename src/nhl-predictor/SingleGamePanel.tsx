@@ -98,7 +98,7 @@ export function SingleGamePanel(props: SingleGamePanelProps) {
               boxShadow: running ? "none" : "0 4px 20px rgba(29,78,216,0.3), 0 0 0 1px rgba(59,130,246,0.2) inset",
             }}
           >
-            {running ? `Simulating  ${simCount.toLocaleString()} / 100,000` : "Run Simulation"}
+            {running ? "Analyzing..." : "Run Analysis"}
           </button>
 
           {/* Odds card */}

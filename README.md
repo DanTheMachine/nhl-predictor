@@ -1,10 +1,10 @@
 # NHL Predictor
 
-An NHL simulation and betting-analysis app built with React, TypeScript, and Vite.
+An NHL prediction and betting-analysis app built with React, TypeScript, and Vite.
 
 It supports:
-- single-game simulation
-- daily slate loading and run-all-sims workflow
+- single-game analysis
+- daily slate loading and run-all workflow
 - manual and bulk odds entry
 - estimated goalie selection with B2B-aware backup switching
 - CSV export for predictions and results

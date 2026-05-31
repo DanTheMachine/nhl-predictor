@@ -1,4 +1,4 @@
-# NHL Predictor — Claude Code Guide
+# NHL Predictor — Codex Guide
 
 ## Project Overview
 

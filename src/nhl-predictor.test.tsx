@@ -184,7 +184,7 @@ describe("single game tools collapse", () => {
     render(<NHLPredictor />);
 
     expect(screen.getByRole("button", { name: "Open Single Game" })).toBeInTheDocument();
-    expect(screen.queryByText("Run Simulation")).not.toBeInTheDocument();
+    expect(screen.queryByText("Run Analysis")).not.toBeInTheDocument();
     expect(screen.queryByText("Filter by Division")).not.toBeInTheDocument();
     expect(screen.queryByText("Advanced Stats Comparison")).not.toBeInTheDocument();
     expect(screen.queryByText("Game Type")).not.toBeInTheDocument();
@@ -192,7 +192,7 @@ describe("single game tools collapse", () => {
     await user.click(screen.getByRole("button", { name: "Open Single Game" }));
 
     expect(screen.getByRole("button", { name: "Hide Single Game" })).toBeInTheDocument();
-    expect(screen.getByText("Run Simulation")).toBeInTheDocument();
+    expect(screen.getByText("Run Analysis")).toBeInTheDocument();
     expect(screen.getByText("Filter by Division")).toBeInTheDocument();
     expect(screen.getByText("Advanced Stats Comparison")).toBeInTheDocument();
     expect(screen.getByText("Game Type")).toBeInTheDocument();
@@ -200,7 +200,7 @@ describe("single game tools collapse", () => {
 
     await user.click(screen.getByRole("button", { name: "Hide Single Game" }));
 
-    expect(screen.queryByText("Run Simulation")).not.toBeInTheDocument();
+    expect(screen.queryByText("Run Analysis")).not.toBeInTheDocument();
     expect(screen.queryByText("Filter by Division")).not.toBeInTheDocument();
     expect(screen.queryByText("Advanced Stats Comparison")).not.toBeInTheDocument();
     expect(screen.queryByText("Game Type")).not.toBeInTheDocument();

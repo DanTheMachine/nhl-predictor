@@ -808,7 +808,7 @@ export function useNhlPredictorController() {
 
   const handleRunAllSims = () => {
     setSimsRunning(true);
-    setScheduleStatus("Running all simulations...");
+    setScheduleStatus("Running analysis...");
 
     setTimeout(() => {
       setLinesRows((prev) =>
@@ -827,7 +827,7 @@ export function useNhlPredictorController() {
         })),
       );
       setSimsRunning(false);
-      setScheduleStatus("All simulations complete - ready to export");
+      setScheduleStatus("Analysis complete - ready to export");
     }, 80);
   };
 

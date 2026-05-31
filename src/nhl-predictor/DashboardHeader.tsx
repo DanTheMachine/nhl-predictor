@@ -84,7 +84,7 @@ export function DashboardHeader({
           textTransform: "uppercase",
           margin: "0 0 16px",
         }}>
-          Corsi · Fenwick · xGF% · Goalie SV% · PDO Regression · 100,000 Simulations
+          Corsi · Fenwick · xGF% · Goalie SV% · PDO Regression
         </p>
 
         {/* Tab switcher */}

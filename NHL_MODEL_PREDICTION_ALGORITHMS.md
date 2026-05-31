@@ -379,7 +379,7 @@ It includes:
 - team stat snapshot
 - goalie override snapshot
 
-If a simulation has not already been run for a row, `buildExportRow(...)` will generate one on demand using the same `predictGame(...)` engine.
+If a prediction has not already been run for a row, `buildExportRow(...)` will generate one on demand using the same `predictGame(...)` engine.
 
 ## 14. Worked Example
 

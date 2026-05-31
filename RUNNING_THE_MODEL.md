@@ -181,7 +181,7 @@ Current UI notes:
   - `Estimated Backup Goalie`
 - only the currently active goalie button is highlighted green
 
-### 7.6 Run all simulations
+### 7.6 Run all predictions
 
 Click:
 
@@ -280,7 +280,7 @@ Typical flow:
 4. set back-to-back flags if needed
 5. fetch live stats if desired
 6. fetch odds or enter them manually
-7. run the simulation
+7. run the analysis
 
 This is useful for:
 
@@ -425,7 +425,7 @@ npm run test:e2e:headed
 
 What the E2E suite currently covers:
 
-- selecting teams and running a simulation
+- selecting teams and running an analysis
 - switching to playoff mode
 - entering manual odds
 - exporting a single-game CSV
