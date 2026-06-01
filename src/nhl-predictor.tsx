@@ -190,7 +190,6 @@ export default function NHLModel() {
               isOpen={singleGameToolsOpen}
               onToggleOpen={() => setSingleGameToolsOpen((prev) => !prev)}
               running={running}
-              simCount={simCount}
               onRunSim={runSim}
               odds={odds}
               oddsSource={oddsSource}
