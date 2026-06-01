@@ -34,7 +34,6 @@ const mockController = vi.hoisted(() => ({
   divFilter: "ALL",
   setDivFilter: vi.fn(),
   running: false,
-  simCount: 0,
   odds: null,
   setOdds: vi.fn(),
   oddsSource: "none" as const,

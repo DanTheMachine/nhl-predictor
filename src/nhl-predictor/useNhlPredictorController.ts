@@ -179,7 +179,6 @@ export function useNhlPredictorController() {
   const [awayB2B, setAwayB2B] = useState<boolean>(false);
   const [result, setResult] = useState<PredictResult | null>(null);
   const [running, setRunning] = useState<boolean>(false);
-  const [simCount, setSimCount] = useState<number>(0);
   const [espnData, setEspnData] = useState<EspnMap | null>(null);
   const [dataSource, setDataSource] = useState<"estimated" | "fetching" | "live">("estimated");
   const [fetchStatus, setFetchStatus] = useState<string>("");
@@ -477,22 +476,11 @@ export function useNhlPredictorController() {
 
   const runSim = () => {
     setRunning(true);
-    setSimCount(0);
     setResult(null);
-
-    let counter = 0;
-    const interval = setInterval(() => {
-      counter += Math.floor(Math.random() * 2800 + 1200);
-      setSimCount(Math.min(counter, 100000));
-
-      if (counter >= 100000) {
-        clearInterval(interval);
-        setTimeout(() => {
-          setResult(predictGame({ homeTeam, awayTeam, gameType, homeB2B, awayB2B, liveStats }));
-          setRunning(false);
-        }, 100);
-      }
-    }, 38);
+    setTimeout(() => {
+      setResult(predictGame({ homeTeam, awayTeam, gameType, homeB2B, awayB2B, liveStats }));
+      setRunning(false);
+    }, 100);
   };
 
   const handleFetchOdds = async () => {
@@ -964,7 +952,6 @@ export function useNhlPredictorController() {
     result,
     setResult,
     running,
-    simCount,
     espnData,
     dataSource,
     fetchStatus,

@@ -42,7 +42,6 @@ export default function NHLModel() {
     divFilter,
     setDivFilter,
     running,
-    simCount,
     odds,
     setOdds,
     oddsSource,
