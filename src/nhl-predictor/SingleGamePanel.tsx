@@ -15,7 +15,6 @@ interface SingleGamePanelProps {
   isOpen: boolean;
   onToggleOpen: () => void;
   running: boolean;
-  simCount: number;
   onRunSim: () => void;
   odds: OddsData | null;
   oddsSource: "none" | "fetching" | "espn" | "manual";
@@ -34,7 +33,6 @@ export function SingleGamePanel(props: SingleGamePanelProps) {
     isOpen,
     onToggleOpen,
     running,
-    simCount,
     onRunSim,
     odds,
     oddsSource,
