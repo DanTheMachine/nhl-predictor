@@ -79,13 +79,15 @@ See [NHL_MODEL_PREDICTION_ALGORITHMS.md](NHL_MODEL_PREDICTION_ALGORITHMS.md) for
 
 - **`gf`/`ga` in `data.ts` are 5v5 per-60 rates (~1.6–2.7), not goals-per-game.** The engine multiplies by `ESTIMATED_TOTAL_SCORING_CALIBRATION = 1.45` to scale them. Live ESPN stats are already goals-per-game, so they use `LIVE_TOTAL_SCORING_CALIBRATION = 1.0`.
 - **ESPN live stats use `?seasontype=2`** to force regular-season data year-round. Without this, the endpoint switches to playoff-only stats once the postseason begins, producing wildly skewed per-game averages from 1–2 games.
-- **`playoffFactor = 0.86`**: playoff games apply a 14% scoring reduction to `hExpGoals`/`aExpGoals`. This accounts for the gap between regular-season ESPN rates (used year-round via `?seasontype=2`) and actual playoff scoring. A 6% factor (0.94) was too small — the model systematically over-projected playoff totals vs sportsbook lines that correctly price in lower scoring.
+- **`playoffFactor = 0.80`**: playoff games apply a 20% scoring reduction to `hExpGoals`/`aExpGoals`. This accounts for the gap between regular-season ESPN rates (used year-round via `?seasontype=2`) and actual playoff scoring. The prior 0.86 factor was too small — the model systematically over-projected playoff totals, with O/U bets going 4-7-6 (36%) during the 2025-26 postseason.
 - **ESPN gf/ga guard**: live gf/ga are only accepted if `gamesPlayed >= 10` and the per-game rate is within `[0.8, 5.0]`; otherwise the baseline value is used.
 - **`clampPct`**: both engines clamp `cf`/`xgf` to `[30, 75]%` before computing the multiplier, preventing corrupt or out-of-range values (e.g. decimal-form `0.6` or raw count `600`) from blowing up projections.
 - **NST paste normalization**: `normPct` in the paste parser detects decimal-form CF% (value `< 5`) and multiplies by 100 before storing.
 - **PP formula**: `(ppPct - (100 - opponentPkPct)) * 0.01` — compares PP% against the opponent's *allowed* PP rate (`100 - pkPct`). A league-average PP (21%) vs a league-average PK-allowed rate (20%) gives near-zero adjustment, which is correct.
 - **Win probability**: logistic transform → regress toward 50% with factor 0.6 → cap at [22%, 78%].
 - **ML edge threshold**: 7% (`ML_EDGE_THRESHOLD = 0.07`) plus a minimum Kelly threshold.
+- **Puck line rec threshold**: 8% edge required (`plHomeEdge > 0.08` or `plAwayEdge > 0.08`). Raised from 3% after the 2025-26 season showed PL bets going 102-117 (-14 units) at the old threshold.
+- **O/U rec threshold**: 6% edge required (`overEdge > 0.06` or `underEdge > 0.06`). Raised from 3.5% after playoff O/U bets went 4-7-6 at the old threshold.
 
 ## Display Conventions
 
@@ -108,7 +110,7 @@ Button classes: `btn-primary` (dark blue), `btn-cyan` (light blue), `btn-amber` 
 
 ## Tests
 
-Tests live in `src/**/*.test.{ts,tsx}`. Run with `npm test`. Currently **112 tests across 12 files**.
+Tests live in `src/**/*.test.{ts,tsx}`. Run with `npm test`. Currently **114 tests across 12 files**.
 
 - `src/nhl-core/engine.test.ts` — legacy engine: predictions, betting analysis, ice conditions, PDO labels, `clampPct` with extreme inputs
 - `src/nhl-predictor/engine.test.ts` — production engine: win prob caps, playoff suppression, B2B penalty, live calibration switch, `clampPct`, goalie overrides, PP symmetry, full `analyzeBetting` suite

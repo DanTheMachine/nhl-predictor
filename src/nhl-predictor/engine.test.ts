@@ -198,7 +198,7 @@ describe('analyzeBetting — production engine', () => {
     const analysis = analyzeBetting(result, { ...evenOdds, overUnder: 5.5 })
 
     expect(analysis.ouRec).toBe('over')
-    expect(analysis.ouEdge).toBeGreaterThan(0.035)
+    expect(analysis.ouEdge).toBeGreaterThan(0.06)
   })
 
   it('recommends the under when projected total is well below the line', () => {
@@ -216,12 +216,29 @@ describe('analyzeBetting — production engine', () => {
   })
 
   it('puck line recommendation uses cover probability vs market implied', () => {
-    // Large projected goal diff makes home -1.5 cover likely
+    // Large projected goal diff (2.5 goals) makes home -1.5 cover likely — clears 8% threshold
     const result = makeResult({ hGoals: '4.50', aGoals: '2.00', total: '6.50', hWinProb: 0.78, aWinProb: 0.22 })
     const odds: OddsData = { ...evenOdds, puckLine: -1.5, puckLineHomeOdds: -110, puckLineAwayOdds: -110 }
     const analysis = analyzeBetting(result, odds)
 
     expect(analysis.puckLineRec).not.toBe('pass')
+  })
+
+  it('puck line passes when projected diff is near the 1.5-goal line (neither side clears 8%)', () => {
+    // Projected diff ~1.5 goals → cover probability ≈ 50/50 → edge near zero on both sides
+    const result = makeResult({ hGoals: '3.50', aGoals: '2.00', total: '5.50', hWinProb: 0.62, aWinProb: 0.38 })
+    const odds: OddsData = { ...evenOdds, puckLine: -1.5, puckLineHomeOdds: -110, puckLineAwayOdds: -110 }
+    const analysis = analyzeBetting(result, odds)
+
+    expect(analysis.puckLineRec).toBe('pass')
+  })
+
+  it('O/U passes on modest 4% edge that would have triggered old 3.5% threshold', () => {
+    // projected total 5.9 vs line 5.5 — edge is real but below new 6% threshold
+    const result = makeResult({ hGoals: '3.00', aGoals: '2.90', total: '5.90' })
+    const analysis = analyzeBetting(result, { ...evenOdds, overUnder: 5.5 })
+
+    expect(analysis.ouRec).toBe('pass')
   })
 })
 

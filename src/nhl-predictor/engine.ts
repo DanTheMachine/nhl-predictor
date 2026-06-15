@@ -39,7 +39,7 @@ export function predictGame({
   if (awaySVOverride != null) a.goalieSV = awaySVOverride;
 
   const isPlayoff = gameType !== "Regular Season";
-  const playoffFactor = isPlayoff ? 0.86 : 1.0;
+  const playoffFactor = isPlayoff ? 0.80 : 1.0;
   const hfa = 0.045;
   const hB2BPenalty = homeB2B ? -0.018 : 0;
   const aB2BPenalty = awayB2B ? -0.018 : 0;
@@ -143,7 +143,7 @@ export function analyzeBetting(result: PredictResult, odds: OddsData): BettingAn
   const plAwayEdge = awayCoverProb - plAwayImplied;
   const homePLLabel = homeFav ? "home -1.5" : "home +1.5";
   const awayPLLabel = homeFav ? "away +1.5" : "away -1.5";
-  const puckLineRec = plHomeEdge > 0.03 ? homePLLabel : plAwayEdge > 0.03 ? awayPLLabel : "pass";
+  const puckLineRec = plHomeEdge > 0.08 ? homePLLabel : plAwayEdge > 0.08 ? awayPLLabel : "pass";
   const puckLineEdge = Math.max(plHomeEdge, plAwayEdge) * 100;
 
   const projTotal = parseFloat(result.total);
@@ -158,7 +158,7 @@ export function analyzeBetting(result: PredictResult, odds: OddsData): BettingAn
   const underImplied = ouSum > 0 ? underRaw / ouSum : 0.5;
   const overEdge = overProb - overImplied;
   const underEdge = underProb - underImplied;
-  const ouRec = overEdge > 0.035 ? "over" : underEdge > 0.035 ? "under" : "pass";
+  const ouRec = overEdge > 0.06 ? "over" : underEdge > 0.06 ? "under" : "pass";
   const ouEdge = ouRec === "over" ? overEdge : ouRec === "under" ? -underEdge : 0;
   const kellyHome = homeMlQualified ? rawKellyHome : 0;
   const kellyAway = awayMlQualified ? rawKellyAway : 0;

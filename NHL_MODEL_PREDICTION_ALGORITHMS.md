@@ -47,7 +47,7 @@ The core projection engine lives in `predictGame(...)`.
 
 ### 2.1 Context adjustments
 
-- Playoff games reduce expected scoring with `playoffFactor = 0.94`.
+- Playoff games reduce expected scoring with `playoffFactor = 0.80`.
 - Regular season games use `playoffFactor = 1.0`.
 - Home ice advantage is modeled as `hfa = 0.045` in the win-probability stage.
 - Each back-to-back applies a scoring penalty:
@@ -310,9 +310,11 @@ Then it maps those back to home and away cover probabilities.
 
 After vig removal on puck line prices:
 
-- bet `home` side if edge exceeds `3.0%`
-- bet `away` side if edge exceeds `3.0%`
+- bet `home` side if edge exceeds `8.0%`
+- bet `away` side if edge exceeds `8.0%`
 - otherwise `pass`
+
+The threshold was raised from `3.0%` to `8.0%` after the 2025-26 season showed puck line bets going 102-117 (-14 units) at the lower threshold.
 
 Displayed value:
 
@@ -335,9 +337,11 @@ Vegas over/under prices are converted to fair implied probabilities the same way
 
 ### 11.3 Recommendation rule
 
-- `over` if `overProb - overImplied > 0.035`
-- `under` if `underProb - underImplied > 0.035`
+- `over` if `overProb - overImplied > 0.06`
+- `under` if `underProb - underImplied > 0.06`
 - `pass` otherwise
+
+The threshold was raised from `0.035` to `0.06` after the 2025-26 playoffs showed O/U bets going 4-7-6 (36%) at the lower threshold, driven by the model consistently recommending over on games that went under.
 
 `ouEdge` is the raw probability difference (positive for over, negative for under).
 
